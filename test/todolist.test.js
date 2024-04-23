@@ -433,6 +433,38 @@ describe("TodoList", () => {
         });
       });
     });
+
+    describe("TodoList.find()", () => {
+      test("returns a Todo object when found", () => {
+        expect(list.find(callback)).toEqual(expect.any(Todo));
+      });
+
+      test("returns undefined when no item is found", () => {
+        expect(list.find(() => false)).toBeUndefined();
+      });
+
+      test("returns Todo reference when one is found", () => {
+        expect(list.find((todo) => todo === todo1)).toBe(todo1);
+        expect(list.find((todo) => todo === todo2)).toBe(todo2);
+        expect(list.find((todo) => todo === todo3)).toBe(todo3);
+      });
+
+      test("calls the provided callback with the correct arguments", () => {
+        list.find(callback);
+        expect(callback).toHaveBeenCalledWith(todo1, 0);
+
+        let alwaysFalse = jest.fn(() => false);
+
+        list.find(alwaysFalse);
+        todos.forEach((todo, index) => {
+          expect(alwaysFalse).toHaveBeenNthCalledWith(
+            index + 1,
+            todo,
+            index,
+          );
+        });
+      });
+    });
   });
 
   describe("TodoList.findByID()", () => {
