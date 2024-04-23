@@ -1,31 +1,22 @@
-# Launch School Template Repository
+# Launch School JS175 Project
 
-## Instructions
+## Todo App
 
-1. Create a new repository from this template.
-2. Clone the repository to your local workspace.
-3. `npm install` the template’s provided dependencies.
-4. Replace this `README`s content with your modified content from one of the
-   example `README`s.
-5. Install any additional required dependencies and set them up if needed:
+A todo list web application
 
-    Ex: For Jest...
+### Requirements
 
-    Run:
+- `node`
+- `npm`
 
-    ```console
-    npm install --save-dev jest @types/jest
-    ```
+### Setup
 
-    And add the following section to your `package.json`:
+Clone repository and run `npm install` to install dependencies.
 
-    ```json
-    {
-        // NOTE: "scripts" is a property of the top level object
-        "scripts": {
-            "test": "jest"
-        }
-    }
-    ```
+### Execution
 
-6. Use any of the example files’ header comments you’d like.
+Start the auto-restarting development web server using:
+
+```shell
+npm start
+```
