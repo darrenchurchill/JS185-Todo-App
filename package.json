@@ -4,13 +4,15 @@
   "version": "0.0.1",
   "main": "todos.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "author": "Darren Churchill",
   "license": "ISC",
   "devDependencies": {
     "@babel/core": "^7.24.0",
     "@babel/eslint-parser": "^7.23.10",
-    "eslint": "^8.57.0"
+    "@types/jest": "^29.5.12",
+    "eslint": "^8.57.0",
+    "jest": "^29.7.0"
   }
 }
