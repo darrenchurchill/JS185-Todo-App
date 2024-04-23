@@ -52,6 +52,15 @@ describe("Todo", () => {
     });
   });
 
+  describe("Todo.setTitle()", () => {
+    test("a Todo's new title is the string value it's constructed with", () => {
+      expect((new Todo()).setTitle("title").getTitle()).toBe("title");
+      expect((new Todo()).setTitle().getTitle()).toBe("undefined");
+      expect((new Todo()).setTitle(1).getTitle()).toBe("1");
+      expect((new Todo()).setTitle({}).getTitle()).toBe(String({}));
+    });
+  });
+
   describe("Todo.markDone()", () => {
     test('marking a Todo "done" changes its isDone() state', () => {
       todo.markDone();

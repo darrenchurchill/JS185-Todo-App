@@ -39,6 +39,26 @@ describe("TodoList", () => {
     });
   });
 
+  describe("TodoList title methods", () => {
+    describe("TodoList.getTitle()", () => {
+      test("a TodoList's title is the string value it's constructed with", () => {
+        expect((new TodoList("title")).getTitle()).toBe("title");
+        expect((new TodoList()).getTitle()).toBe("undefined");
+        expect((new TodoList(1)).getTitle()).toBe("1");
+        expect((new TodoList({})).getTitle()).toBe(String({}));
+      });
+    });
+
+    describe("TodoList.setTitle()", () => {
+      test("a TodoList's new title is the string value it's constructed with", () => {
+        expect((new TodoList()).setTitle("title").getTitle()).toBe("title");
+        expect((new TodoList()).setTitle().getTitle()).toBe("undefined");
+        expect((new TodoList()).setTitle(1).getTitle()).toBe("1");
+        expect((new TodoList()).setTitle({}).getTitle()).toBe(String({}));
+      });
+    });
+  });
+
   describe("TodoList.size()", () => {
     test("list has a size of 3", () => {
       expect(list.size()).toBe(3);
@@ -368,13 +388,13 @@ describe("TodoList", () => {
       });
 
       test("returns an empty TodoList, given an all-filtering callback", () => {
-        expect(list.filter(() => false)).toEqual(new TodoList("Today's Todos"));
+        expect(list.filter(() => false)).toEqual(new TodoList(list.getTitle()));
       });
 
       test("returns a filtered TodoList, given a conditionally filtering callback", () => {
         // use toString() so the id field isn't considered.
         todo2.markDone();
-        let otherList = new TodoList("Today's Todos");
+        let otherList = new TodoList(list.getTitle());
         expect(list
           .filter((todo) => todo.isDone())
           .toString()
@@ -452,7 +472,7 @@ describe("TodoList", () => {
     describe('when no Todos are "done"', () => {
       test("returns an empty TodoList", () => {
         expect((new TodoList("empty list")).allDone()).toEqual(new TodoList("empty list"));
-        expect(list.allDone()).toEqual(new TodoList("Today's Todos"));
+        expect(list.allDone()).toEqual(new TodoList(list.getTitle()));
       });
     });
 
@@ -464,7 +484,7 @@ describe("TodoList", () => {
       });
 
       test("returns a shallow copy", () => {
-        let otherList = new TodoList("Today's Todos");
+        let otherList = new TodoList(list.getTitle());
         todos.forEach((todo) => otherList.add(todo));
         expect(list.allDone()).not.toBe(list);
         expect(list.allDone()).toEqual(otherList);
@@ -473,7 +493,7 @@ describe("TodoList", () => {
 
     describe('when some Todos are "done" and some "not done"', () => {
       test('returns a TodoList with only the "done" Todos', () => {
-        let otherList = new TodoList("Today's Todos");
+        let otherList = new TodoList(list.getTitle());
         todo2.markDone();
         todos
           .filter((todo) => todo.isDone())
@@ -491,7 +511,7 @@ describe("TodoList", () => {
       });
 
       test("returns a shallow copy", () => {
-        let otherList = new TodoList("Today's Todos");
+        let otherList = new TodoList(list.getTitle());
         todos.forEach((todo) => otherList.add(todo));
         expect(list.allNotDone()).not.toBe(list);
         expect(list.allNotDone()).toEqual(otherList);
@@ -501,13 +521,13 @@ describe("TodoList", () => {
     describe('when all Todos are "done"', () => {
       test("returns an empty TodoList", () => {
         list.markAllDone();
-        expect(list.allNotDone()).toEqual(new TodoList("Today's Todos"));
+        expect(list.allNotDone()).toEqual(new TodoList(list.getTitle()));
       });
     });
 
     describe('when some Todos are "done" and some "not done"', () => {
       test('returns a TodoList with only the "not done" Todos', () => {
-        let otherList = new TodoList("Today's Todos");
+        let otherList = new TodoList(list.getTitle());
         todo2.markDone();
         todos
           .filter((todo) => !todo.isDone())
