@@ -132,8 +132,8 @@ describe("TodoList", () => {
   });
 
   describe("TodoList.isDone()", () => {
-    test("empty TodoList returns true", () => {
-      expect((new TodoList("Empty List").isDone())).toBe(true);
+    test("empty TodoList returns false", () => {
+      expect((new TodoList("Empty List").isDone())).toBe(false);
     });
 
     describe("3-Todo list -> returns false if any Todos aren't done", () => {
