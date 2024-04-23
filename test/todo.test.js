@@ -7,7 +7,7 @@
 /* eslint-disable max-lines-per-function */
 "use strict";
 
-const Todo = require("../lib/todo.js");
+const Todo = require("../lib/todo");
 
 describe("Todo", () => {
   /** @type {Todo} */
