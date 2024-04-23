@@ -30,6 +30,15 @@ describe("TodoList", () => {
     list.add(todo3);
   });
 
+  describe("Todo.getID()", () => {
+    test("a Todo's ID is a number", () => {
+      expect((new TodoList()).getID()).toEqual(expect.any(Number));
+      expect((new TodoList()).getID()).toEqual(expect.any(Number));
+      expect((new TodoList()).getID()).toEqual(expect.any(Number));
+      expect((new TodoList()).getID()).toEqual(expect.any(Number));
+    });
+  });
+
   describe("TodoList.size()", () => {
     test("list has a size of 3", () => {
       expect(list.size()).toBe(3);
@@ -363,11 +372,22 @@ describe("TodoList", () => {
       });
 
       test("returns a filtered TodoList, given a conditionally filtering callback", () => {
+        // use toString() so the id field isn't considered.
         todo2.markDone();
         let otherList = new TodoList("Today's Todos");
-        expect(list.filter((todo) => todo.isDone())).not.toEqual(otherList);
+        expect(list
+          .filter((todo) => todo.isDone())
+          .toString()
+        ).not.toBe(otherList
+          .toString()
+        );
         otherList.add(todo2);
-        expect(list.filter((todo) => todo.isDone())).toEqual(otherList);
+        expect(list
+          .filter((todo) => todo.isDone())
+          .toString()
+        ).toBe(otherList
+          .toString()
+        );
       });
 
       test("returns a TodoList with shallow copied Todo items", () => {
@@ -392,6 +412,19 @@ describe("TodoList", () => {
           );
         });
       });
+    });
+  });
+
+  describe("TodoList.findByID()", () => {
+    test("returns the Todo when there is one with the given ID", () => {
+      expect(list.findByID(todo1.getID())).toBe(todo1);
+      expect(list.findByID(todo2.getID())).toBe(todo2);
+      expect(list.findByID(todo3.getID())).toBe(todo3);
+    });
+
+    test("returns undefined when there is no Todo with the given ID", () => {
+      expect((new TodoList("new list")).findByID(todo1.getID())).toBeUndefined();
+      expect(list.findByTitle("doesn't exist")).toBeUndefined();
     });
   });
 

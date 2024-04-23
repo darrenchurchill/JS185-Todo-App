@@ -34,6 +34,15 @@ describe("Todo", () => {
     });
   });
 
+  describe("Todo.getID()", () => {
+    test("a Todo's ID is a number", () => {
+      expect((new Todo()).getID()).toEqual(expect.any(Number));
+      expect((new Todo()).getID()).toEqual(expect.any(Number));
+      expect((new Todo()).getID()).toEqual(expect.any(Number));
+      expect((new Todo()).getID()).toEqual(expect.any(Number));
+    });
+  });
+
   describe("Todo.getTitle()", () => {
     test("a Todo's title is the string value it's constructed with", () => {
       expect((new Todo("title")).getTitle()).toBe("title");
