@@ -475,6 +475,20 @@ describe("TodoList", () => {
         });
       });
     });
+
+    describe("TodoList.indexOf()", () => {
+      test("returns 0 when the first item is found", () => {
+        expect(list.indexOf(todo1)).toBe(0);
+      });
+
+      test("returns -1 when no item is found", () => {
+        expect(list.indexOf(new Todo("new todo"))).toBe(-1);
+      });
+
+      test("returns `list.size() - 1` when the last item is found", () => {
+        expect(list.indexOf(todo3)).toBe(list.size() - 1);
+      });
+    });
   });
 
   describe("TodoList.findByID()", () => {
