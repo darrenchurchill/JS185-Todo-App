@@ -15,6 +15,7 @@ app.set("views", "./views");
 app.set("view engine", "pug");
 
 app.use(morgan("common"));
+app.use(express.static("public"));
 
 app.get("/", (_req, res) => {
   res.render("lists");
