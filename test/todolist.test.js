@@ -524,6 +524,22 @@ describe("TodoList", () => {
     });
   });
 
+  describe("TodoList.allTodos()", () => {
+    test("returns an empty TodoList when list is empty", () => {
+      expect((new TodoList("empty list")).allTodos()).toEqual(new TodoList("empty list"));
+
+      while (list.size() > 0) list.pop();
+      expect(list.allTodos()).toEqual(new TodoList(list.getTitle()));
+    });
+
+    test("returns a shallow copy", () => {
+      let otherList = new TodoList(list.getTitle());
+      todos.forEach((todo) => otherList.add(todo));
+      expect(list.allTodos()).not.toBe(list);
+      expect(list.allTodos()).toEqual(otherList);
+    });
+  });
+
   describe("TodoList.allDone()", () => {
     describe('when no Todos are "done"', () => {
       test("returns an empty TodoList", () => {
