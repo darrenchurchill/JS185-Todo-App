@@ -353,23 +353,25 @@ describe("TodoList", () => {
   });
 
   describe("TodoList callback methods", () => {
-    let callback;
+    let alwaysTrueCb;
+    let alwaysFalseCb;
 
     beforeEach(() => {
-      callback = jest.fn(() => true);
+      alwaysTrueCb = jest.fn(() => true);
+      alwaysFalseCb = jest.fn(() => false);
     });
 
     describe("TodoList.forEach()", () => {
       test("calls the provided callback exactly size() number of times", () => {
         const size = list.size();
-        list.forEach(callback);
-        expect(callback).toHaveBeenCalledTimes(size);
+        list.forEach(alwaysTrueCb);
+        expect(alwaysTrueCb).toHaveBeenCalledTimes(size);
       });
 
       test("calls the provided callback with the correct arguments", () => {
-        list.forEach(callback);
+        list.forEach(alwaysTrueCb);
         todos.forEach((todo, index) => {
-          expect(callback).toHaveBeenNthCalledWith(
+          expect(alwaysTrueCb).toHaveBeenNthCalledWith(
             index + 1,
             todo,
             index,
@@ -380,11 +382,11 @@ describe("TodoList", () => {
 
     describe("TodoList.filter()", () => {
       test("returns a TodoList object", () => {
-        expect(list.filter(callback)).toEqual(expect.any(TodoList));
+        expect(list.filter(alwaysTrueCb)).toEqual(expect.any(TodoList));
       });
 
       test("returns an equivalent TodoList, given a non-filtering callback", () => {
-        expect(list.filter(callback)).toEqual(list);
+        expect(list.filter(alwaysTrueCb)).toEqual(list);
       });
 
       test("returns an empty TodoList, given an all-filtering callback", () => {
@@ -411,21 +413,21 @@ describe("TodoList", () => {
       });
 
       test("returns a TodoList with shallow copied Todo items", () => {
-        list.filter(callback).forEach((todo) => {
+        list.filter(alwaysTrueCb).forEach((todo) => {
           expect(todos).toContain(todo);
         });
       });
 
       test("calls the provided callback exactly size() number of times", () => {
         const size = list.size();
-        list.filter(callback);
-        expect(callback).toHaveBeenCalledTimes(size);
+        list.filter(alwaysTrueCb);
+        expect(alwaysTrueCb).toHaveBeenCalledTimes(size);
       });
 
       test("calls the provided callback with the correct arguments", () => {
-        list.filter(callback);
+        list.filter(alwaysTrueCb);
         todos.forEach((todo, index) => {
-          expect(callback).toHaveBeenNthCalledWith(
+          expect(alwaysTrueCb).toHaveBeenNthCalledWith(
             index + 1,
             todo,
             index,
@@ -436,7 +438,7 @@ describe("TodoList", () => {
 
     describe("TodoList.find()", () => {
       test("returns a Todo object when found", () => {
-        expect(list.find(callback)).toEqual(expect.any(Todo));
+        expect(list.find(alwaysTrueCb)).toEqual(expect.any(Todo));
       });
 
       test("returns undefined when no item is found", () => {
@@ -450,14 +452,12 @@ describe("TodoList", () => {
       });
 
       test("calls the provided callback with the correct arguments", () => {
-        list.find(callback);
-        expect(callback).toHaveBeenCalledWith(todo1, 0);
+        list.find(alwaysTrueCb);
+        expect(alwaysTrueCb).toHaveBeenCalledWith(todo1, 0);
 
-        let alwaysFalse = jest.fn(() => false);
-
-        list.find(alwaysFalse);
+        list.find(alwaysFalseCb);
         todos.forEach((todo, index) => {
-          expect(alwaysFalse).toHaveBeenNthCalledWith(
+          expect(alwaysFalseCb).toHaveBeenNthCalledWith(
             index + 1,
             todo,
             index,
