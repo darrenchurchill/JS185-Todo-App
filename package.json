@@ -4,7 +4,8 @@
   "version": "0.0.1",
   "main": "todos.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "start": "nodemon todos.js"
   },
   "author": "Darren Churchill",
   "license": "ISC",
