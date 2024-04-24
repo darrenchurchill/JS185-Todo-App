@@ -7,6 +7,8 @@
 const express = require("express");
 const morgan = require("morgan");
 
+const todoLists = require("./lib/seed-data");
+
 const app = express();
 const HOST = "localhost";
 const PORT = 3000;
@@ -18,7 +20,7 @@ app.use(morgan("common"));
 app.use(express.static("public"));
 
 app.get("/", (_req, res) => {
-  res.render("lists");
+  res.render("lists", { todoLists });
 });
 
 app.listen(PORT, HOST, () => {
