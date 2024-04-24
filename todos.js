@@ -5,6 +5,7 @@
 "use strict";
 
 const express = require("express");
+const { body, matchedData, validationResult } = require("express-validator");
 const morgan = require("morgan");
 
 const lists = require("./lib/seed-data");
@@ -51,8 +52,40 @@ app.get("/lists", (_req, res) => {
 });
 
 app.post("/lists",
+  body("todoListTitle")
+    .trim()
+    .notEmpty()
+    .withMessage("List Title is required.")
+    .bail()
+    .isLength({ max: 100 })
+    .withMessage("Max List Title length is 100 characters.")
+    .custom((title) => {
+      return todoLists.lists.every((todoList) => todoList.getTitle() !== title);
+    })
+    .withMessage("You're already using that List Title. Titles must be unique."),
+
+  (req, res, next) => {
+    let result = (
+      validationResult.withDefaults({
+        formatter: (err) => err.msg,
+      })
+    )(req);
+
+    if (result.isEmpty()) {
+      next();
+      return;
+    }
+
+    res.locals.messages = {
+      error: [],
+    };
+    result.array().forEach((errMsg) => res.locals.messages.error.push(errMsg));
+
+    res.render("new-list");
+  },
+
   (req, res) => {
-    const title = req.body.todoListTitle.trim();
+    const title = matchedData(req).todoListTitle;
     todoLists.lists.push(new TodoList(title));
     res.redirect("/lists");
   }
