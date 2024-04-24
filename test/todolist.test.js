@@ -161,8 +161,10 @@ describe("TodoList", () => {
   });
 
   describe("TodoList.add()", () => {
-    test("throws TypeError if item is not a Todo", () => {
-      expect(() => list.add("not a todo")).toThrow(TypeError);
+    test("throws TypeError if item is not a Todo or a string", () => {
+      expect(() => list.add(new Todo("not a todo"))).not.toThrow(TypeError);
+      expect(() => list.add("not a todo")).not.toThrow(TypeError);
+
       expect(() => list.add(1)).toThrow(TypeError);
       expect(() => list.add({})).toThrow(TypeError);
       expect(() => list.add(new TodoList("empty list"))).toThrow(TypeError);
