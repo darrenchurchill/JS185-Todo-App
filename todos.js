@@ -81,7 +81,9 @@ app.post("/lists",
     };
     result.array().forEach((errMsg) => res.locals.messages.error.push(errMsg));
 
-    res.render("new-list");
+    res.render("new-list", {
+      todoListTitle: req.body.todoListTitle,
+    });
   },
 
   (req, res) => {
