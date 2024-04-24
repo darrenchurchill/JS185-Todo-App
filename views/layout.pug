@@ -15,4 +15,11 @@ html(lang="en-US")
       block headerLinks
 
     main
+      if messages && Object.keys(messages).length > 0
+        ul
+          each msgType in Object.keys(messages)
+            each msg in messages[msgType]
+              li.flash(class=msgType)
+                p= msg
+
       block main
