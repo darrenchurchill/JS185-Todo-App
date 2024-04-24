@@ -422,13 +422,23 @@ describe("TodoList", () => {
         const size = list.size();
         list.filter(alwaysTrueCb);
         expect(alwaysTrueCb).toHaveBeenCalledTimes(size);
+        list.filter(alwaysFalseCb);
+        expect(alwaysFalseCb).toHaveBeenCalledTimes(size);
       });
 
       test("calls the provided callback with the correct arguments", () => {
         list.filter(alwaysTrueCb);
+        list.filter(alwaysFalseCb);
         todos.forEach((todo, index) => {
+          // eslint-disable-next-line id-length
+          let n = index + 1;
           expect(alwaysTrueCb).toHaveBeenNthCalledWith(
-            index + 1,
+            n,
+            todo,
+            index,
+          );
+          expect(alwaysFalseCb).toHaveBeenNthCalledWith(
+            n,
             todo,
             index,
           );
