@@ -32,6 +32,10 @@ const todoLists = {
       return -1;
     });
   },
+
+  find(id) {
+    return this.lists.find((list) => list.getID() === id);
+  },
 };
 
 app.set("views", "./views");
