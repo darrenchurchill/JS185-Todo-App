@@ -106,6 +106,11 @@ app.get("/lists/new", (_req, res) => {
   res.render("new-list");
 });
 
+app.use((err, _req, res, _next) => {
+  console.log(err);
+  res.status(404).send(err.message);
+});
+
 app.listen(PORT, HOST, () => {
   console.log(`Todos server listening on ${HOST}:${PORT}...`);
 });
