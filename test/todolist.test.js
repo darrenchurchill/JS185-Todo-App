@@ -75,6 +75,64 @@ describe("TodoList", () => {
     });
   });
 
+  describe("TodoList.toSortedArray()", () => {
+    let
+      /** @type {Todo} */  todo4,
+      /** @type {Todo} */  todo5;
+
+    beforeEach(() => {
+      todo4 = new Todo("assemble legos");
+      todo5 = new Todo("bake cookies");
+      todos.push(todo4);
+      todos.push(todo5);
+      list.add(todo4);
+      list.add(todo5);
+    });
+
+    test("empty TodoList returns empty array", () => {
+      expect((new TodoList("Empty List").toSortedArray())).toEqual([]);
+    });
+
+    test("3-Todo list returns array with 3 Todos", () => {
+      expect(list.toSortedArray().length).toBe(todos.length);
+    });
+
+    test("all todos done -> todos sorted by title, case-insensitive", () => {
+      list.markAllDone();
+      expect(list.toSortedArray()).toEqual([
+        todo4,
+        todo5,
+        todo1,
+        todo2,
+        todo3,
+      ]);
+    });
+
+    test("no todos done -> todos sorted by title, case-insensitive", () => {
+      list.markAllUndone();
+      expect(list.toSortedArray()).toEqual([
+        todo4,
+        todo5,
+        todo1,
+        todo2,
+        todo3,
+      ]);
+    });
+
+    test("some todos done, some not done -> done todos AFTER not done todos", () => {
+      list.markAllUndone();
+      todo4.markDone();
+      todo5.markDone();
+      expect(list.toSortedArray()).toEqual([
+        todo1,
+        todo2,
+        todo3,
+        todo4,
+        todo5,
+      ]);
+    });
+  });
+
   describe("TodoList.first()", () => {
     test("empty TodoList returns undefined", () => {
       expect((new TodoList("Empty List").first())).toBeUndefined();
