@@ -1,0 +1,14 @@
+extends layout
+
+block headerLinks
+  .actions
+    a.list(href="/lists") All Lists
+
+block main
+  #todos(class=todoList.isDone() ? "done" : "")
+    h2= todoList.getTitle()
+
+    if todoList.size() === 0
+      p You don't have any todos. Why not create one?
+    else
+      p list todos

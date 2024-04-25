@@ -5,7 +5,12 @@
 "use strict";
 
 const express = require("express");
-const { body, matchedData, validationResult } = require("express-validator");
+const {
+  body,
+  param,
+  matchedData,
+  validationResult,
+} = require("express-validator");
 const flash = require("express-flash");
 const morgan = require("morgan");
 const session = require("express-session");
@@ -105,6 +110,36 @@ app.post("/lists",
 app.get("/lists/new", (_req, res) => {
   res.render("new-list");
 });
+
+app.get("/lists/:listID",
+  param("listID")
+    .isInt()
+    .withMessage("That isn't a list ID. List IDs are integers.")
+    .bail()
+    .toInt()
+    .custom((listID) => {
+      return todoLists.find(listID) !== undefined;
+    })
+    .withMessage("That list doesn't exist."),
+
+  (req, res, next) => {
+    const result = validationResultMsgOnly(req);
+    if (result.isEmpty()) {
+      next();
+      return;
+    }
+    result.array().forEach((errMsg) => req.flash("error", errMsg));
+
+    res.redirect("/lists");
+  },
+
+  (req, res) => {
+    const data = matchedData(req);
+    res.render("list", {
+      todoList: todoLists.find(data.listID),
+    });
+  }
+);
 
 app.use((err, _req, res, _next) => {
   console.log(err);
