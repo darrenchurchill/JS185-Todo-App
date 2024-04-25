@@ -17,6 +17,10 @@ const app = express();
 const HOST = "localhost";
 const PORT = 3000;
 
+const validationResultMsgOnly = validationResult.withDefaults({
+  formatter: (err) => err.msg,
+});
+
 const todoLists = {
   /** @type {Array.<TodoList>} */
   lists,
@@ -78,17 +82,11 @@ app.post("/lists",
     .withMessage("You're already using that List Title. Titles must be unique."),
 
   (req, res, next) => {
-    let result = (
-      validationResult.withDefaults({
-        formatter: (err) => err.msg,
-      })
-    )(req);
-
+    let result = validationResultMsgOnly(req);
     if (result.isEmpty()) {
       next();
       return;
     }
-
     result.array().forEach((errMsg) => req.flash("error", errMsg));
 
     res.render("new-list", {
