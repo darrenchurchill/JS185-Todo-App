@@ -6,7 +6,9 @@
 
 const express = require("express");
 const { body, matchedData, validationResult } = require("express-validator");
+const flash = require("express-flash");
 const morgan = require("morgan");
+const session = require("express-session");
 
 const lists = require("./lib/seed-data");
 const { TodoList } = require("./lib/todolist");
@@ -38,6 +40,13 @@ app.set("view engine", "pug");
 app.use(morgan("common"));
 app.use(express.static("public"));
 app.use(express.urlencoded({ extended: false }));
+app.use(session({
+  name: "launch-school-todo-tracker-session-id",
+  resave: false,
+  saveUninitialized: true,
+  secret: "this is not secure",
+}));
+app.use(flash());
 
 app.get("/", (_req, res) => {
   res.redirect("/lists");
@@ -76,10 +85,7 @@ app.post("/lists",
       return;
     }
 
-    res.locals.messages = {
-      error: [],
-    };
-    result.array().forEach((errMsg) => res.locals.messages.error.push(errMsg));
+    result.array().forEach((errMsg) => req.flash("error", errMsg));
 
     res.render("new-list", {
       todoListTitle: req.body.todoListTitle,
@@ -89,6 +95,7 @@ app.post("/lists",
   (req, res) => {
     const title = matchedData(req).todoListTitle;
     todoLists.lists.push(new TodoList(title));
+    req.flash("success", `Todo List created: "${title}"`);
     res.redirect("/lists");
   }
 );
