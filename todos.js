@@ -139,9 +139,8 @@ app.get("/lists/:listID",
   }
 );
 
-app.use((err, req, res, _next) => {
+app.use((err, _req, res, _next) => {
   console.log(err);
-  req.flash("error", err.message);
   res.status(404).render("404");
 });
 
