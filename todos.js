@@ -122,15 +122,13 @@ app.get("/lists/:listID",
     })
     .withMessage("That list doesn't exist."),
 
-  (req, res, next) => {
+  (req, _res, next) => {
     const result = validationResultMsgOnly(req);
     if (result.isEmpty()) {
       next();
       return;
     }
-    result.array().forEach((errMsg) => req.flash("error", errMsg));
-
-    res.redirect("/lists");
+    next(new Error(result.array()[0]));
   },
 
   (req, res) => {
@@ -141,9 +139,10 @@ app.get("/lists/:listID",
   }
 );
 
-app.use((err, _req, res, _next) => {
+app.use((err, req, res, _next) => {
   console.log(err);
-  res.status(404).send(err.message);
+  req.flash("error", err.message);
+  res.status(404).render("404");
 });
 
 app.listen(PORT, HOST, () => {
