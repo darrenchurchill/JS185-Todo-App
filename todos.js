@@ -15,7 +15,7 @@ const flash = require("express-flash");
 const morgan = require("morgan");
 const session = require("express-session");
 
-const lists = require("./lib/seed-data");
+const todoLists = require("./lib/seed-data");
 const { TodoList } = require("./lib/todolist");
 
 const app = express();
@@ -25,27 +25,6 @@ const PORT = 3000;
 const validationResultMsgOnly = validationResult.withDefaults({
   formatter: (err) => err.msg,
 });
-
-const todoLists = {
-  /** @type {Array.<TodoList>} */
-  lists,
-
-  sort() {
-    this.lists.sort((listA, listB) => {
-      if (listA.isDone() === listB.isDone()) {
-        return listA.getTitle().toLowerCase().localeCompare(
-          listB.getTitle().toLowerCase()
-        );
-      }
-      if (listA.isDone()) return 1;
-      return -1;
-    });
-  },
-
-  find(id) {
-    return this.lists.find((list) => list.getID() === id);
-  },
-};
 
 app.set("views", "./views");
 app.set("view engine", "pug");
