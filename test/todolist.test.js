@@ -412,6 +412,106 @@ describe("TodoList", () => {
     });
   });
 
+  describe("TodoList.compare()", () => {
+    let
+      /** @type {TodoList} */  list1,
+      /** @type {TodoList} */  list2,
+      /** @type {TodoList} */  list3,
+      /** @type {TodoList} */  list4;
+
+    beforeEach(() => {
+      list1 = new TodoList("alpha");
+      list1.add("list1 todo");
+      list2 = new TodoList("Alpha");
+      list2.add("list2 todo");
+      list3 = new TodoList("beta");
+      list3.add("list3 todo");
+      list4 = new TodoList("epsilon");
+      list4.add("list4 todo");
+    });
+
+    describe("TodoList.compare()", () => {
+      describe('when both TodoLists are "done"', () => {
+        test("title comparison (case-insensitive) determines order", () => {
+          list1.markAllDone();
+          list2.markAllDone();
+          list3.markAllDone();
+          list4.markAllDone();
+          expect(list1.compare(list2)).toBe(0);
+          expect(list2.compare(list1)).toBe(0);
+          expect(list1.compare(list3)).toBe(-1);
+          expect(list3.compare(list1)).toBe(1);
+          expect(list3.compare(list4)).toBe(-1);
+          expect(list4.compare(list3)).toBe(1);
+        });
+      });
+
+      describe('when both TodoLists are "not done"', () => {
+        test("title comparison (case-insensitive) determines order", () => {
+          list1.markAllUndone();
+          list2.markAllUndone();
+          list3.markAllUndone();
+          list4.markAllUndone();
+          expect(list1.compare(list2)).toBe(0);
+          expect(list2.compare(list1)).toBe(0);
+          expect(list1.compare(list3)).toBe(-1);
+          expect(list3.compare(list1)).toBe(1);
+          expect(list3.compare(list4)).toBe(-1);
+          expect(list4.compare(list3)).toBe(1);
+        });
+      });
+
+      describe('when one TodoList is "done" and the other is "not done"', () => {
+        // eslint-disable-next-line max-statements
+        test('"done" TodoLists come after "not done" TodoLists', () => {
+          list1.markAllUndone();
+          list2.markAllDone();
+          list3.markAllDone();
+          list4.markAllDone();
+          expect(list1.compare(list2)).toBe(-1);
+          expect(list1.compare(list3)).toBe(-1);
+          expect(list1.compare(list4)).toBe(-1);
+          expect(list2.compare(list1)).toBe(1);
+          expect(list3.compare(list1)).toBe(1);
+          expect(list4.compare(list1)).toBe(1);
+
+          list1.markAllDone();
+          list2.markAllUndone();
+          list3.markAllDone();
+          list4.markAllDone();
+          expect(list2.compare(list1)).toBe(-1);
+          expect(list2.compare(list3)).toBe(-1);
+          expect(list2.compare(list4)).toBe(-1);
+          expect(list1.compare(list2)).toBe(1);
+          expect(list3.compare(list2)).toBe(1);
+          expect(list4.compare(list2)).toBe(1);
+
+          list1.markAllDone();
+          list2.markAllDone();
+          list3.markAllUndone();
+          list4.markAllDone();
+          expect(list3.compare(list1)).toBe(-1);
+          expect(list3.compare(list2)).toBe(-1);
+          expect(list3.compare(list4)).toBe(-1);
+          expect(list1.compare(list3)).toBe(1);
+          expect(list2.compare(list3)).toBe(1);
+          expect(list4.compare(list3)).toBe(1);
+
+          list1.markAllDone();
+          list2.markAllDone();
+          list3.markAllDone();
+          list4.markAllUndone();
+          expect(list4.compare(list1)).toBe(-1);
+          expect(list4.compare(list2)).toBe(-1);
+          expect(list4.compare(list3)).toBe(-1);
+          expect(list1.compare(list4)).toBe(1);
+          expect(list2.compare(list4)).toBe(1);
+          expect(list3.compare(list4)).toBe(1);
+        });
+      });
+    });
+  });
+
   describe("TodoList callback methods", () => {
     let alwaysTrueCb;
     let alwaysFalseCb;
