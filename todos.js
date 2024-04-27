@@ -106,20 +106,24 @@ const lists = {
   },
 };
 
+function createIDValidationChain(paramName, msgPrefix, finalCallback) {
+  return param(paramName)
+    .isInt()
+    .withMessage(`That isn't a ${msgPrefix} ID; ${msgPrefix} IDs are integers.`)
+    .bail()
+    .toInt()
+    .custom(finalCallback)
+    .withMessage(`That ${msgPrefix} doesn't exist.`);
+}
+
 /**
  * Object defining list-related middleware functions.
  */
 const list = {
   get: [
-    param("listID")
-      .isInt()
-      .withMessage("That isn't a list ID. List IDs are integers.")
-      .bail()
-      .toInt()
-      .custom((listID) => {
-        return todoLists.find(listID) !== undefined;
-      })
-      .withMessage("That list doesn't exist."),
+    createIDValidationChain("listID", "list", (listID) => {
+      return todoLists.find(listID) !== undefined;
+    }),
 
     (req, _res, next) => {
       const result = validationResultMsgOnly(req);
