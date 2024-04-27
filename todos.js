@@ -1,3 +1,4 @@
+/* eslint-disable quote-props */
 /**
  * JS175 Todo App
  * todos.js
@@ -22,9 +23,125 @@ const app = express();
 const HOST = "localhost";
 const PORT = 3000;
 
+/**
+ * Construct the application routes from a `routeMap` object.
+ * Modified from
+ * {@link https://github.com/expressjs/express/blob/2ac25098548f739c4f2b526b2a00aa60a74c8e75/examples/route-map/index.js#L52-L66 | expressjs example}.
+ * @param {object} routeMap the object mapping application routes to operations
+ * @param {string|undefined} route the current route prefix; used for recursive
+ * calls
+ */
+app.map = function(routeMap, route) {
+  route = route || '';
+  for (let key in routeMap) {
+    if (typeof routeMap[key] === "function" || Array.isArray(routeMap[key])) {
+      // get: function(){ ... } or get: [ function(){}, ... ]
+      console.log("Route map:", { key, route });
+      app[key](route, [ routeMap[key] ].flat());
+    } else if (typeof routeMap[key] === "object") {
+      // { '/path': { ... }}
+      app.map(routeMap[key], route + key);
+    }
+  }
+};
+
 const validationResultMsgOnly = validationResult.withDefaults({
   formatter: (err) => err.msg,
 });
+
+/**
+ * Middleware functions
+ */
+
+/**
+ * Object defining lists-related middleware functions.
+ */
+const lists = {
+  get(_req, res) {
+    todoLists.sort();
+
+    res.render("lists", {
+      todoLists: todoLists.lists
+    });
+  },
+
+  post: [
+    body("todoListTitle")
+      .trim()
+      .notEmpty()
+      .withMessage("List Title is required.")
+      .bail()
+      .isLength({ max: 100 })
+      .withMessage("Max List Title length is 100 characters.")
+      .custom((title) => {
+        return todoLists.lists.every(
+          (todoList) => todoList.getTitle() !== title
+        );
+      })
+      .withMessage("You're already using that List Title. Titles must be unique."),
+
+    (req, res, next) => {
+      let result = validationResultMsgOnly(req);
+      if (result.isEmpty()) {
+        next();
+        return;
+      }
+      result.array().forEach((errMsg) => req.flash("error", errMsg));
+
+      res.render("new-list", {
+        todoListTitle: req.body.todoListTitle,
+      });
+    },
+
+    (req, res) => {
+      const title = matchedData(req).todoListTitle;
+      todoLists.lists.push(new TodoList(title));
+      req.flash("success", `Todo List created: "${title}"`);
+      res.redirect("/lists");
+    }
+  ],
+
+  new(_req, res) {
+    res.render("new-list");
+  },
+};
+
+/**
+ * Object defining list-related middleware functions.
+ */
+const list = {
+  get: [
+    param("listID")
+      .isInt()
+      .withMessage("That isn't a list ID. List IDs are integers.")
+      .bail()
+      .toInt()
+      .custom((listID) => {
+        return todoLists.find(listID) !== undefined;
+      })
+      .withMessage("That list doesn't exist."),
+
+    (req, _res, next) => {
+      const result = validationResultMsgOnly(req);
+      if (result.isEmpty()) {
+        next();
+        return;
+      }
+      next(new Error(result.array()[0]));
+    },
+
+    (req, res) => {
+      const data = matchedData(req);
+      res.render("list", {
+        todoList: todoLists.find(data.listID),
+      });
+    }
+  ],
+};
+
+/**
+ * Application setup
+ */
 
 app.set("views", "./views");
 app.set("view engine", "pug");
@@ -40,83 +157,23 @@ app.use(session({
 }));
 app.use(flash());
 
-app.get("/", (_req, res) => {
-  res.redirect("/lists");
-});
-
-app.get("/lists", (_req, res) => {
-  todoLists.sort();
-
-  res.render("lists", {
-    todoLists: todoLists.lists
-  });
-});
-
-app.post("/lists",
-  body("todoListTitle")
-    .trim()
-    .notEmpty()
-    .withMessage("List Title is required.")
-    .bail()
-    .isLength({ max: 100 })
-    .withMessage("Max List Title length is 100 characters.")
-    .custom((title) => {
-      return todoLists.lists.every((todoList) => todoList.getTitle() !== title);
-    })
-    .withMessage("You're already using that List Title. Titles must be unique."),
-
-  (req, res, next) => {
-    let result = validationResultMsgOnly(req);
-    if (result.isEmpty()) {
-      next();
-      return;
-    }
-    result.array().forEach((errMsg) => req.flash("error", errMsg));
-
-    res.render("new-list", {
-      todoListTitle: req.body.todoListTitle,
-    });
+app.map({
+  "/": {
+    get: (_req, res) => {
+      res.redirect("/lists");
+    },
   },
-
-  (req, res) => {
-    const title = matchedData(req).todoListTitle;
-    todoLists.lists.push(new TodoList(title));
-    req.flash("success", `Todo List created: "${title}"`);
-    res.redirect("/lists");
-  }
-);
-
-app.get("/lists/new", (_req, res) => {
-  res.render("new-list");
-});
-
-app.get("/lists/:listID",
-  param("listID")
-    .isInt()
-    .withMessage("That isn't a list ID. List IDs are integers.")
-    .bail()
-    .toInt()
-    .custom((listID) => {
-      return todoLists.find(listID) !== undefined;
-    })
-    .withMessage("That list doesn't exist."),
-
-  (req, _res, next) => {
-    const result = validationResultMsgOnly(req);
-    if (result.isEmpty()) {
-      next();
-      return;
-    }
-    next(new Error(result.array()[0]));
+  "/lists": {
+    get: lists.get,
+    post: lists.post,
+    "/new": {
+      get: lists.new,
+    },
+    "/:listID": {
+      get: list.get,
+    },
   },
-
-  (req, res) => {
-    const data = matchedData(req);
-    res.render("list", {
-      todoList: todoLists.find(data.listID),
-    });
-  }
-);
+});
 
 app.use((err, _req, res, _next) => {
   console.log(err);
