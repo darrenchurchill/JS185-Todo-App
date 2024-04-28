@@ -203,6 +203,28 @@ const todo = {
       }
     ];
   },
+
+  get removeTodo() {
+    return [
+      ...this.validationChain,
+      (req, res) => {
+        const data = matchedData(req);
+        const list = todoLists.find(data.listID);
+        let delIndex = 0;
+        const todo = list.find((todo, index) => {
+          if (todo.getID() === data.todoID) {
+            delIndex = index;
+            return true;
+          }
+          return false;
+        });
+
+        list.removeAt(delIndex);
+        req.flash("success", `"${todo.getTitle()}" deleted.`);
+        res.redirect(`/lists/${data.listID}`);
+      },
+    ];
+  },
 };
 
 /**
@@ -241,6 +263,9 @@ app.map({
         "/:todoID": {
           "/toggle": {
             post: todo.toggle,
+          },
+          "/destroy": {
+            post: todo.removeTodo,
           },
         },
       },
