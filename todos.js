@@ -179,6 +179,11 @@ app.map({
   },
 });
 
+// Register final error-generating middleware for all unused methods and paths
+app.all("*", (_req, _res, next) => {
+  next(new Error(`The route: ${_req.method} ${_req.path} doesn't exist`));
+});
+
 app.use((err, _req, res, _next) => {
   console.log(err);
   res.status(404).render("404");
