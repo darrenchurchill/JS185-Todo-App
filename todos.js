@@ -57,15 +57,7 @@ const validationResultMsgOnly = validationResult.withDefaults({
  * Object defining lists-related middleware functions.
  */
 const lists = {
-  get(_req, res) {
-    todoLists.sort();
-
-    res.render("lists", {
-      todoLists: todoLists.lists
-    });
-  },
-
-  post: [
+  validationChain: [
     body("todoListTitle")
       .trim()
       .notEmpty()
@@ -92,14 +84,27 @@ const lists = {
         todoListTitle: req.body.todoListTitle,
       });
     },
-
-    (req, res) => {
-      const title = matchedData(req).todoListTitle;
-      todoLists.lists.push(new TodoList(title));
-      req.flash("success", `Todo List created: "${title}"`);
-      res.redirect("/lists");
-    }
   ],
+
+  get(_req, res) {
+    todoLists.sort();
+
+    res.render("lists", {
+      todoLists: todoLists.lists
+    });
+  },
+
+  get post() {
+    return [
+      ...this.validationChain,
+      (req, res) => {
+        const title = matchedData(req).todoListTitle;
+        todoLists.lists.push(new TodoList(title));
+        req.flash("success", `Todo List created: "${title}"`);
+        res.redirect("/lists");
+      }
+    ];
+  },
 
   new(_req, res) {
     res.render("new-list");
@@ -120,7 +125,7 @@ function createIDValidationChain(paramName, msgPrefix, finalCallback) {
  * Object defining list-related middleware functions.
  */
 const list = {
-  get: [
+  validationChain: [
     createIDValidationChain("listID", "list", (listID) => {
       return todoLists.find(listID) !== undefined;
     }),
@@ -133,21 +138,26 @@ const list = {
       }
       next(new Error(result.array()[0]));
     },
-
-    (req, res) => {
-      const data = matchedData(req);
-      res.render("list", {
-        todoList: todoLists.find(data.listID),
-      });
-    }
   ],
+
+  get get() {
+    return [
+      ...this.validationChain,
+      (req, res) => {
+        const data = matchedData(req);
+        res.render("list", {
+          todoList: todoLists.find(data.listID),
+        });
+      }
+    ];
+  },
 };
 
 /**
  * Object defining todo-related middleware functions.
  */
 const todo = {
-  toggle: [
+  validationChain: [
     createIDValidationChain("listID", "list", (listID) => {
       return todoLists.find(listID) !== undefined;
     }),
@@ -174,20 +184,25 @@ const todo = {
       }
       next(new Error(result.array()[0]));
     },
-
-    (req, res) => {
-      const data = matchedData(req);
-      const todo = todoLists.find(data.listID).findByID(data.todoID);
-      if (todo.isDone()) {
-        req.flash("success", `"${todo.getTitle()}" marked not done.`);
-        todo.markUndone();
-      } else {
-        req.flash("success", `"${todo.getTitle()}" marked done.`);
-        todo.markDone();
-      }
-      res.redirect(`/lists/${data.listID}`);
-    }
   ],
+
+  get toggle() {
+    return [
+      ...this.validationChain,
+      (req, res) => {
+        const data = matchedData(req);
+        const todo = todoLists.find(data.listID).findByID(data.todoID);
+        if (todo.isDone()) {
+          req.flash("success", `"${todo.getTitle()}" marked not done.`);
+          todo.markUndone();
+        } else {
+          req.flash("success", `"${todo.getTitle()}" marked done.`);
+          todo.markDone();
+        }
+        res.redirect(`/lists/${data.listID}`);
+      }
+    ];
+  },
 };
 
 /**
