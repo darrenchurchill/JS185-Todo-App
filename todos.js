@@ -144,6 +144,48 @@ const list = {
 };
 
 /**
+ * Object defining todo-related middleware functions.
+ */
+const todo = {
+  toggle: [
+    createIDValidationChain("listID", "list", (listID) => {
+      return todoLists.find(listID) !== undefined;
+    }),
+
+    (req, _res, next) => {
+      const result = validationResultMsgOnly(req);
+      if (result.isEmpty()) {
+        next();
+        return;
+      }
+      next(new Error(result.array()[0]));
+    },
+
+    createIDValidationChain("todoID", "todo", (todoID, { req }) => {
+      const listID = matchedData(req).listID;
+      return todoLists.find(listID).findByID(todoID) !== undefined;
+    }),
+
+    (req, _res, next) => {
+      const result = validationResultMsgOnly(req);
+      if (result.isEmpty()) {
+        next();
+        return;
+      }
+      next(new Error(result.array()[0]));
+    },
+
+    (req, res) => {
+      const data = matchedData(req);
+      const todo = todoLists.find(data.listID).findByID(data.todoID);
+      if (todo.isDone()) todo.markUndone();
+      else todo.markDone();
+      res.redirect(`/lists/${data.listID}`);
+    }
+  ],
+};
+
+/**
  * Application setup
  */
 
@@ -175,6 +217,13 @@ app.map({
     },
     "/:listID": {
       get: list.get,
+      "/todos": {
+        "/:todoID": {
+          "/toggle": {
+            post: todo.toggle,
+          },
+        },
+      },
     },
   },
 });
