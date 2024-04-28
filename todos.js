@@ -178,8 +178,13 @@ const todo = {
     (req, res) => {
       const data = matchedData(req);
       const todo = todoLists.find(data.listID).findByID(data.todoID);
-      if (todo.isDone()) todo.markUndone();
-      else todo.markDone();
+      if (todo.isDone()) {
+        req.flash("success", `"${todo.getTitle()}" marked not done.`);
+        todo.markUndone();
+      } else {
+        req.flash("success", `"${todo.getTitle()}" marked done.`);
+        todo.markDone();
+      }
       res.redirect(`/lists/${data.listID}`);
     }
   ],
