@@ -116,7 +116,7 @@ const lists = {
     ];
   },
 
-  new(_req, res) {
+  newListForm(_req, res) {
     res.render("new-list");
   },
 };
@@ -313,7 +313,7 @@ app.map({
     get: lists.displayLists,
     post: lists.newList,
     "/new": {
-      get: lists.new,
+      get: lists.newListForm,
     },
     "/:listID": {
       get: list.get,
