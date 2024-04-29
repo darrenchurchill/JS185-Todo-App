@@ -253,6 +253,24 @@ const list = {
       }
     ];
   },
+
+  get removeList() {
+    return [
+      ...this.validationChain,
+      (req, res) => {
+        const data = matchedData(req);
+        const todoList = todoLists.find(data.listID);
+        todoLists.lists.splice(
+          todoLists.lists.findIndex(
+            (list) => list.getID() === todoList.getID()
+          ),
+          1
+        );
+        req.flash("success", `${todoList.getTitle()} deleted.`);
+        res.redirect("/lists");
+      },
+    ];
+  },
 };
 
 /**
@@ -366,6 +384,9 @@ app.map({
       get: list.displayTodos,
       "/complete_all": {
         post: list.completeAll,
+      },
+      "/destroy": {
+        post: list.removeList,
       },
       "/edit": {
         get: list.editListForm,
