@@ -111,14 +111,14 @@ const lists = {
   },
 };
 
-function createIDValidationChain(paramName, msgPrefix, finalCallback) {
+function createPathParamValidationChain(paramName, paramDesc, finalCallback) {
   return param(paramName)
     .isInt()
-    .withMessage(`That isn't a ${msgPrefix} ID; ${msgPrefix} IDs are integers.`)
+    .withMessage(`That isn't a ${paramDesc} ID; ${paramDesc} IDs are integers.`)
     .bail()
     .toInt()
     .custom(finalCallback)
-    .withMessage(`That ${msgPrefix} doesn't exist.`);
+    .withMessage(`That ${paramDesc} doesn't exist.`);
 }
 
 /**
@@ -126,7 +126,7 @@ function createIDValidationChain(paramName, msgPrefix, finalCallback) {
  */
 const list = {
   validationChain: [
-    createIDValidationChain("listID", "list", (listID) => {
+    createPathParamValidationChain("listID", "list", (listID) => {
       return todoLists.find(listID) !== undefined;
     }),
 
@@ -170,7 +170,7 @@ const list = {
  */
 const todo = {
   validationChain: [
-    createIDValidationChain("listID", "list", (listID) => {
+    createPathParamValidationChain("listID", "list", (listID) => {
       return todoLists.find(listID) !== undefined;
     }),
 
@@ -183,7 +183,7 @@ const todo = {
       next(new Error(result.array()[0]));
     },
 
-    createIDValidationChain("todoID", "todo", (todoID, { req }) => {
+    createPathParamValidationChain("todoID", "todo", (todoID, { req }) => {
       const listID = matchedData(req).listID;
       return todoLists.find(listID).findByID(todoID) !== undefined;
     }),
