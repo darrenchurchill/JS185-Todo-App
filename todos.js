@@ -162,7 +162,7 @@ const list = {
     ];
   },
 
-  get get() {
+  get displayTodos() {
     return [
       ...this.validationChain,
 
@@ -316,7 +316,7 @@ app.map({
       get: lists.newListForm,
     },
     "/:listID": {
-      get: list.get,
+      get: list.displayTodos,
       "/complete_all": {
         post: list.completeAll,
       },
