@@ -104,6 +104,9 @@ function createListTitleValidationChain(onErrorRenderer) {
 
 /**
  * Object defining lists-related middleware functions.
+ * Middleware functions are "lists-related" if they DON'T require a listID; they
+ * either operate on the entire group of `TodoList`s, or create a new
+ * `TodoList`.
  */
 const lists = {
   validationChain: createListTitleValidationChain((req, res) => {
@@ -139,6 +142,7 @@ const lists = {
 
 /**
  * Object defining list-related middleware functions.
+ * A function is "list-related" if it requires a listID path parameter.
  */
 const list = {
   validationChain: [
@@ -253,6 +257,9 @@ const list = {
 
 /**
  * Object defining todo-related middleware functions.
+ * A function is "todo-related" if it requires a `todoID` path parameter; it
+ * will also require a `listID` path parameter, since `Todo`s belong to a
+ * `TodoList`.
  */
 const todo = {
   validationChain: [
