@@ -1,19 +1,22 @@
 extends layout
 
-block main
-  form(action="/lists" method="post")
+mixin listForm(action, cancelHref, label)
+  form(action=action method="post")
     dl
       dt
-        label(for="todoListTitle") Enter the title for your new list:
+        label(for="todoListTitle")= label
       dd
         input(
           type="text",
           id="todoListTitle"
           name="todoListTitle"
           placeholder="List Title",
-          value=todoListTitle
+          value=todoListTitle || (todoList && todoList.getTitle())
         )
 
     fieldset.actions
       input(type="submit" value="Save")
-      a(href="/lists") Cancel
+      a(href=cancelHref) Cancel
+
+block main
+  +listForm("/lists", "/lists", "Enter the title for your new list:")
