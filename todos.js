@@ -81,11 +81,8 @@ function createPathParamValidationChain(paramName, paramDesc, finalCallback) {
     .withMessage(`That ${paramDesc} doesn't exist.`);
 }
 
-/**
- * Object defining lists-related middleware functions.
- */
-const lists = {
-  validationChain: [
+function createListTitleValidationChain(onErrorRenderer) {
+  return [
     createFormValidationChain("todoListTitle", "List Title", (title) => {
       return todoLists.lists.every(
         (todoList) => todoList.getTitle() !== title
@@ -100,11 +97,20 @@ const lists = {
       }
       result.array().forEach((errMsg) => req.flash("error", errMsg));
 
-      res.render("new-list", {
-        todoListTitle: req.body.todoListTitle,
-      });
+      onErrorRenderer(req, res);
     },
-  ],
+  ];
+}
+
+/**
+ * Object defining lists-related middleware functions.
+ */
+const lists = {
+  validationChain: createListTitleValidationChain((req, res) => {
+    res.render("new-list", {
+      todoListTitle: req.body.todoListTitle,
+    });
+  }),
 
   displayLists(_req, res) {
     todoLists.sort();
