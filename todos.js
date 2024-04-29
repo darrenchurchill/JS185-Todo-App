@@ -165,11 +165,47 @@ const list = {
   get get() {
     return [
       ...this.validationChain,
+
+      (req, res, next) => {
+        // Check session data stored upon invalid "new todo" form submission.
+        res.locals.todoTitle = req.session.todoTitle;
+        delete req.session.todoTitle;
+        next();
+      },
+
       (req, res) => {
         const data = matchedData(req);
         res.render("list", {
           todoList: todoLists.find(data.listID),
+          todoTitle: res.locals.todoTitle,
         });
+      }
+    ];
+  },
+
+  // eslint-disable-next-line max-lines-per-function
+  get newTodo() {
+    return [
+      ...this.validationChain,
+      createFormValidationChain("todoTitle", "Todo Title"),
+
+      (req, res, next) => {
+        const result = validationResultMsgOnly(req);
+        if (result.isEmpty()) {
+          next();
+          return;
+        }
+        result.array().forEach((errMsg) => req.flash("error", errMsg));
+        req.session.todoTitle = req.body.todoTitle;
+        const data = matchedData(req);
+        res.redirect(`/lists/${data.listID}`);
+      },
+
+      (req, res) => {
+        const data = matchedData(req);
+        todoLists.find(data.listID).add(data.todoTitle);
+        req.flash("success", `${data.todoTitle} added.`);
+        res.redirect(`/lists/${data.listID}`);
       }
     ];
   },
@@ -285,6 +321,7 @@ app.map({
         post: list.completeAll,
       },
       "/todos": {
+        post: list.newTodo,
         "/:todoID": {
           "/toggle": {
             post: todo.toggle,
