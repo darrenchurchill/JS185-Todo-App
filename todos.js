@@ -71,6 +71,16 @@ function createFormValidationChain(
     );
 }
 
+function createPathParamValidationChain(paramName, paramDesc, finalCallback) {
+  return param(paramName)
+    .isInt()
+    .withMessage(`That isn't a ${paramDesc} ID; ${paramDesc} IDs are integers.`)
+    .bail()
+    .toInt()
+    .custom(finalCallback)
+    .withMessage(`That ${paramDesc} doesn't exist.`);
+}
+
 /**
  * Object defining lists-related middleware functions.
  */
@@ -120,16 +130,6 @@ const lists = {
     res.render("new-list");
   },
 };
-
-function createPathParamValidationChain(paramName, paramDesc, finalCallback) {
-  return param(paramName)
-    .isInt()
-    .withMessage(`That isn't a ${paramDesc} ID; ${paramDesc} IDs are integers.`)
-    .bail()
-    .toInt()
-    .custom(finalCallback)
-    .withMessage(`That ${paramDesc} doesn't exist.`);
-}
 
 /**
  * Object defining list-related middleware functions.
