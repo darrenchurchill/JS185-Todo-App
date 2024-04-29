@@ -96,7 +96,7 @@ const lists = {
     },
   ],
 
-  get(_req, res) {
+  displayLists(_req, res) {
     todoLists.sort();
 
     res.render("lists", {
@@ -310,7 +310,7 @@ app.map({
     },
   },
   "/lists": {
-    get: lists.get,
+    get: lists.displayLists,
     post: lists.post,
     "/new": {
       get: lists.new,
