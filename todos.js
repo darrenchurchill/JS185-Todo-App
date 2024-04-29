@@ -104,7 +104,7 @@ const lists = {
     });
   },
 
-  get post() {
+  get newList() {
     return [
       ...this.validationChain,
       (req, res) => {
@@ -311,7 +311,7 @@ app.map({
   },
   "/lists": {
     get: lists.displayLists,
-    post: lists.post,
+    post: lists.newList,
     "/new": {
       get: lists.new,
     },
