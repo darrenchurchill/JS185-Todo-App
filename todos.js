@@ -140,6 +140,18 @@ const list = {
     },
   ],
 
+  get completeAll() {
+    return [
+      ...this.validationChain,
+      (req, res) => {
+        const data = matchedData(req);
+        todoLists.find(data.listID).markAllDone();
+        req.flash("success", "All todos marked completed.");
+        res.redirect(`/lists/${data.listID}`);
+      },
+    ];
+  },
+
   get get() {
     return [
       ...this.validationChain,
@@ -259,6 +271,9 @@ app.map({
     },
     "/:listID": {
       get: list.get,
+      "/complete_all": {
+        post: list.completeAll,
+      },
       "/todos": {
         "/:todoID": {
           "/toggle": {
