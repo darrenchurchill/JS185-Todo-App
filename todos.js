@@ -182,6 +182,26 @@ const list = {
     ];
   },
 
+  get editList() {
+    return [
+      ...this.validationChain,
+      createListTitleValidationChain((req, res) => {
+        const data = matchedData(req);
+        res.render("edit-list", {
+          todoList: todoLists.find(data.listID),
+          todoListTitle: req.body.todoListTitle,
+        });
+      }),
+
+      (req, res) => {
+        const data = matchedData(req);
+        todoLists.find(data.listID).setTitle(data.todoListTitle);
+        req.flash("success", "Todo List title updated.");
+        res.redirect(`/lists/${data.listID}`);
+      },
+    ];
+  },
+
   get displayTodos() {
     return [
       ...this.validationChain,
@@ -342,6 +362,7 @@ app.map({
       },
       "/edit": {
         get: list.editListForm,
+        post: list.editList,
       },
       "/todos": {
         post: list.newTodo,
