@@ -53,24 +53,34 @@ const validationResultMsgOnly = validationResult.withDefaults({
  * Middleware functions
  */
 
+function createFormValidationChain(
+  fieldName,
+  fieldDesc,
+  finalCallback = () => true,
+) {
+  return body(fieldName)
+    .trim()
+    .notEmpty()
+    .withMessage(`${fieldDesc} is required.`)
+    .bail()
+    .isLength({ max: 100 })
+    .withMessage(`Max ${fieldDesc} length is 100 characters.`)
+    .custom(finalCallback)
+    .withMessage(
+      `You're already using that ${fieldDesc}. ${fieldDesc}s must be unique.`
+    );
+}
+
 /**
  * Object defining lists-related middleware functions.
  */
 const lists = {
   validationChain: [
-    body("todoListTitle")
-      .trim()
-      .notEmpty()
-      .withMessage("List Title is required.")
-      .bail()
-      .isLength({ max: 100 })
-      .withMessage("Max List Title length is 100 characters.")
-      .custom((title) => {
-        return todoLists.lists.every(
-          (todoList) => todoList.getTitle() !== title
-        );
-      })
-      .withMessage("You're already using that List Title. Titles must be unique."),
+    createFormValidationChain("todoListTitle", "List Title", (title) => {
+      return todoLists.lists.every(
+        (todoList) => todoList.getTitle() !== title
+      );
+    }),
 
     (req, res, next) => {
       let result = validationResultMsgOnly(req);
