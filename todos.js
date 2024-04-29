@@ -168,6 +168,20 @@ const list = {
     ];
   },
 
+  get editListForm() {
+    return [
+      ...this.validationChain,
+      (req, res) => {
+        const data = matchedData(req);
+        const todoList = todoLists.find(data.listID);
+        res.render("edit-list", {
+          todoList,
+          todoListTitle: todoList.getTitle(),
+        });
+      },
+    ];
+  },
+
   get displayTodos() {
     return [
       ...this.validationChain,
@@ -325,6 +339,9 @@ app.map({
       get: list.displayTodos,
       "/complete_all": {
         post: list.completeAll,
+      },
+      "/edit": {
+        get: list.editListForm,
       },
       "/todos": {
         post: list.newTodo,
