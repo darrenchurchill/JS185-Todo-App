@@ -2,7 +2,8 @@
 
 ## Todo App
 
-A todo list web application
+A todo list web application. The Launch School provided final project code is
+available [here](https://da77jsbdz4r05.cloudfront.net/zips/js175/todos-final.zip).
 
 ### Requirements
 
