@@ -5,6 +5,7 @@
  */
 "use strict";
 
+const store = require("connect-loki");
 const express = require("express");
 const {
   body,
@@ -16,10 +17,11 @@ const flash = require("express-flash");
 const morgan = require("morgan");
 const session = require("express-session");
 
-const todoLists = require("./lib/seed-data");
 const { TodoList } = require("./lib/todolist");
+const TodoLists = require("./lib/todolists");
 
 const app = express();
+const LokiStore = store(session);
 const HOST = "localhost";
 const PORT = 3000;
 
@@ -81,13 +83,18 @@ function createPathParamValidationChain(paramName, paramDesc, finalCallback) {
     .withMessage(`That ${paramDesc} doesn't exist.`);
 }
 
+// eslint-disable-next-line max-lines-per-function
 function createListTitleValidationChain(onErrorRenderer) {
   return [
-    createFormValidationChain("todoListTitle", "List Title", (title) => {
-      return todoLists.lists.every(
-        (todoList) => todoList.getTitle() !== title
-      );
-    }),
+    createFormValidationChain(
+      "todoListTitle",
+      "List Title",
+      (title, { req }) => {
+        return req.session.todoLists.lists.every(
+          (todoList) => todoList.getTitle() !== title
+        );
+      }
+    ),
 
     (req, res, next) => {
       let result = validationResultMsgOnly(req);
@@ -115,11 +122,11 @@ const lists = {
     });
   }),
 
-  displayLists(_req, res) {
-    todoLists.sort();
+  displayLists(req, res) {
+    req.session.todoLists.sort();
 
     res.render("lists", {
-      todoLists: todoLists.lists
+      todoLists: req.session.todoLists.lists,
     });
   },
 
@@ -128,7 +135,7 @@ const lists = {
       ...this.validationChain,
       (req, res) => {
         const title = matchedData(req).todoListTitle;
-        todoLists.lists.push(new TodoList(title));
+        req.session.todoLists.lists.push(new TodoList(title));
         req.flash("success", `Todo List created: "${title}"`);
         res.redirect("/lists");
       }
@@ -146,8 +153,8 @@ const lists = {
  */
 const list = {
   validationChain: [
-    createPathParamValidationChain("listID", "list", (listID) => {
-      return todoLists.find(listID) !== undefined;
+    createPathParamValidationChain("listID", "list", (listID, { req }) => {
+      return req.session.todoLists.find(listID) !== undefined;
     }),
 
     (req, _res, next) => {
@@ -165,7 +172,7 @@ const list = {
       ...this.validationChain,
       (req, res) => {
         const data = matchedData(req);
-        todoLists.find(data.listID).markAllDone();
+        req.session.todoLists.find(data.listID).markAllDone();
         req.flash("success", "All todos marked completed.");
         res.redirect(`/lists/${data.listID}`);
       },
@@ -177,7 +184,7 @@ const list = {
       ...this.validationChain,
       (req, res) => {
         const data = matchedData(req);
-        const todoList = todoLists.find(data.listID);
+        const todoList = req.session.todoLists.find(data.listID);
         res.render("edit-list", {
           todoList,
           todoListTitle: todoList.getTitle(),
@@ -192,14 +199,14 @@ const list = {
       createListTitleValidationChain((req, res) => {
         const data = matchedData(req);
         res.render("edit-list", {
-          todoList: todoLists.find(data.listID),
+          todoList: req.session.todoLists.find(data.listID),
           todoListTitle: req.body.todoListTitle,
         });
       }),
 
       (req, res) => {
         const data = matchedData(req);
-        todoLists.find(data.listID).setTitle(data.todoListTitle);
+        req.session.todoLists.find(data.listID).setTitle(data.todoListTitle);
         req.flash("success", "Todo List title updated.");
         res.redirect(`/lists/${data.listID}`);
       },
@@ -220,7 +227,7 @@ const list = {
       (req, res) => {
         const data = matchedData(req);
         res.render("list", {
-          todoList: todoLists.find(data.listID),
+          todoList: req.session.todoLists.find(data.listID),
           todoTitle: res.locals.todoTitle,
         });
       }
@@ -247,7 +254,7 @@ const list = {
 
       (req, res) => {
         const data = matchedData(req);
-        todoLists.find(data.listID).add(data.todoTitle);
+        req.session.todoLists.find(data.listID).add(data.todoTitle);
         req.flash("success", `${data.todoTitle} added.`);
         res.redirect(`/lists/${data.listID}`);
       }
@@ -259,9 +266,9 @@ const list = {
       ...this.validationChain,
       (req, res) => {
         const data = matchedData(req);
-        const todoList = todoLists.find(data.listID);
-        todoLists.lists.splice(
-          todoLists.lists.findIndex(
+        const todoList = req.session.todoLists.find(data.listID);
+        req.session.todoLists.lists.splice(
+          req.session.todoLists.lists.findIndex(
             (list) => list.getID() === todoList.getID()
           ),
           1
@@ -281,8 +288,8 @@ const list = {
  */
 const todo = {
   validationChain: [
-    createPathParamValidationChain("listID", "list", (listID) => {
-      return todoLists.find(listID) !== undefined;
+    createPathParamValidationChain("listID", "list", (listID, { req }) => {
+      return req.session.todoLists.find(listID) !== undefined;
     }),
 
     (req, _res, next) => {
@@ -296,7 +303,7 @@ const todo = {
 
     createPathParamValidationChain("todoID", "todo", (todoID, { req }) => {
       const listID = matchedData(req).listID;
-      return todoLists.find(listID).findByID(todoID) !== undefined;
+      return req.session.todoLists.find(listID).findByID(todoID) !== undefined;
     }),
 
     (req, _res, next) => {
@@ -314,7 +321,9 @@ const todo = {
       ...this.validationChain,
       (req, res) => {
         const data = matchedData(req);
-        const todo = todoLists.find(data.listID).findByID(data.todoID);
+        const todo = req.session.todoLists
+          .find(data.listID)
+          .findByID(data.todoID);
         if (todo.isDone()) {
           req.flash("success", `"${todo.getTitle()}" marked not done.`);
           todo.markUndone();
@@ -332,7 +341,7 @@ const todo = {
       ...this.validationChain,
       (req, res) => {
         const data = matchedData(req);
-        const list = todoLists.find(data.listID);
+        const list = req.session.todoLists.find(data.listID);
         let delIndex = 0;
         const todo = list.find((todo, index) => {
           if (todo.getID() === data.todoID) {
@@ -361,12 +370,32 @@ app.use(morgan("common"));
 app.use(express.static("public"));
 app.use(express.urlencoded({ extended: false }));
 app.use(session({
+  cookie: {
+    httpOnly: true,
+    maxAge: 31 * 24 * 60 * 60 * 1000, // 31 days, in ms
+    path: "/",
+    secure: false,
+  },
   name: "launch-school-todo-tracker-session-id",
   resave: false,
   saveUninitialized: true,
   secret: "this is not secure",
+  store: new LokiStore({}),
 }));
 app.use(flash());
+
+app.use((req, _res, next) => {
+  console.log({ todoLists: req.session.todoLists });
+
+  if (req.session.todoLists instanceof TodoLists) {
+    next();
+    return;
+  }
+  req.session.todoLists = new TodoLists(
+    (req.session.todoLists && req.session.todoLists.lists) || []
+  );
+  next();
+});
 
 app.map({
   "/": {
