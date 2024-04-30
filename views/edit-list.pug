@@ -6,7 +6,7 @@ block main
       h2 Editing "#{todoList.getTitle()}"
       ul
         li
-          form(
+          form.delete(
             action=`/lists/${todoList.getID()}/destroy`
             method="post"
           )
