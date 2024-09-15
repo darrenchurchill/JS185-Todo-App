@@ -1,6 +1,6 @@
 {
-  "name": "js175-todo-app",
-  "description": "JS175 Project: Todo App",
+  "name": "js185-todo-app",
+  "description": "JS185 Project: Todo App",
   "version": "0.0.1",
   "main": "todos.js",
   "scripts": {

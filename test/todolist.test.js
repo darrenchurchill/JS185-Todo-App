@@ -1,5 +1,5 @@
 /**
- * JS175 Todo App
+ * JS185 Todo App
  * TodoList class Tests
  * Mostly reused from JS130
  */

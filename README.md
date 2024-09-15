@@ -1,4 +1,4 @@
-# Launch School JS175 Project
+# Launch School JS185 Project
 
 ## Todo App
 
