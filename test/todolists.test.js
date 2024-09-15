@@ -19,7 +19,7 @@ describe("TodoList", () => {
     /** @type {Array.<TodoList>} */  asArray;
 
   beforeEach(() => {
-    todoLists = require("../lib/seed-data");
+    todoLists = require("../lib/seed-test-data");
     asArray = todoLists.lists;
     [
       todoList1,
