@@ -122,11 +122,18 @@ const lists = {
     });
   }),
 
-  displayLists(req, res) {
-    req.session.todoLists.sort();
+  displayLists(_req, res) {
+    const todoLists = res.locals.todoStore.sortedTodoLists();
+    const todoListsMetadata = todoLists.reduce((meta, todoList) => {
+      return meta.set(todoList, {
+        countDone: TodoSessionStore.countDone(todoList),
+        isDone: TodoSessionStore.isDoneTodoList(todoList),
+      });
+    }, new Map());
 
     res.render("lists", {
-      todoLists: req.session.todoLists.lists,
+      todoLists,
+      todoListsMetadata,
     });
   },
 
