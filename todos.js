@@ -17,8 +17,8 @@ const flash = require("express-flash");
 const morgan = require("morgan");
 const session = require("express-session");
 
+const { TodoSessionStore } = require("./lib/todo-session-store");
 const { TodoList } = require("./lib/todolist");
-const TodoLists = require("./lib/todolists");
 
 const app = express();
 const LokiStore = store(session);
@@ -384,16 +384,8 @@ app.use(session({
 }));
 app.use(flash());
 
-app.use((req, _res, next) => {
-  console.log({ todoLists: req.session.todoLists });
-
-  if (req.session.todoLists instanceof TodoLists) {
-    next();
-    return;
-  }
-  req.session.todoLists = new TodoLists(
-    (req.session.todoLists && req.session.todoLists.lists) || []
-  );
+app.use((req, res, next) => {
+  res.locals.todoStore = new TodoSessionStore(req.session);
   next();
 });
 
