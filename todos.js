@@ -123,17 +123,8 @@ const lists = {
   }),
 
   displayLists(_req, res) {
-    const todoLists = res.locals.todoStore.sortedTodoLists();
-    const todoListsMetadata = todoLists.reduce((meta, todoList) => {
-      return meta.set(todoList, {
-        countDone: TodoSessionStore.countDone(todoList),
-        isDone: TodoSessionStore.isDoneTodoList(todoList),
-      });
-    }, new Map());
-
     res.render("lists", {
-      todoLists,
-      todoListsMetadata,
+      todoLists: res.locals.todoStore.sortedTodoLists(),
     });
   },
 
