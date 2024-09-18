@@ -170,7 +170,7 @@ const list = {
       ...this.validationChain,
       (req, res) => {
         const data = matchedData(req);
-        req.session.todoLists.find(data.listID).markAllDone();
+        res.locals.todoStore.markAllDone(data.listID);
         req.flash("success", "All todos marked completed.");
         res.redirect(`/lists/${data.listID}`);
       },
