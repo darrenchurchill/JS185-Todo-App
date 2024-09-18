@@ -131,7 +131,7 @@ const lists = {
       ...this.validationChain,
       (req, res) => {
         const title = matchedData(req).todoListTitle;
-        req.session.todoLists.lists.push(new TodoList(title));
+        res.locals.todoStore.addList(title);
         req.flash("success", `Todo List created: "${title}"`);
         res.redirect("/lists");
       }
