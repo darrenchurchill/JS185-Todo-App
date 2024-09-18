@@ -254,7 +254,7 @@ const list = {
 
       (req, res) => {
         const data = matchedData(req);
-        req.session.todoLists.find(data.listID).add(data.todoTitle);
+        res.locals.todoStore.addTodo(data.listID, data.todoTitle);
         req.flash("success", `${data.todoTitle} added.`);
         res.redirect(`/lists/${data.listID}`);
       }
