@@ -321,15 +321,13 @@ const todo = {
       ...this.validationChain,
       (req, res) => {
         const data = matchedData(req);
-        const todo = req.session.todoLists
-          .find(data.listID)
-          .findByID(data.todoID);
-        if (todo.isDone()) {
-          req.flash("success", `"${todo.getTitle()}" marked not done.`);
-          todo.markUndone();
+        const todo = res.locals.todoStore.findTodo(data.todoID, data.listID);
+        if (todo.done) {
+          req.flash("success", `"${todo.title}" marked not done.`);
+          res.locals.todoStore.markUndone(data.todoID, data.listID);
         } else {
-          req.flash("success", `"${todo.getTitle()}" marked done.`);
-          todo.markDone();
+          req.flash("success", `"${todo.title}" marked done.`);
+          res.locals.todoStore.markDone(data.todoID, data.listID);
         }
         res.redirect(`/lists/${data.listID}`);
       }
