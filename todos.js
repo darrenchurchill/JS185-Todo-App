@@ -197,14 +197,14 @@ const list = {
       createListTitleValidationChain((req, res) => {
         const data = matchedData(req);
         res.render("edit-list", {
-          todoList: req.session.todoLists.find(data.listID),
+          todoList: res.locals.todoStore.findList(data.listID),
           todoListTitle: req.body.todoListTitle,
         });
       }),
 
       (req, res) => {
         const data = matchedData(req);
-        req.session.todoLists.find(data.listID).setTitle(data.todoListTitle);
+        res.locals.todoStore.setListTitle(data.listID, data.todoListTitle);
         req.flash("success", "Todo List title updated.");
         res.redirect(`/lists/${data.listID}`);
       },
