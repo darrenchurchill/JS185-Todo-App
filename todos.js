@@ -18,7 +18,6 @@ const morgan = require("morgan");
 const session = require("express-session");
 
 const { TodoSessionStore } = require("./lib/todo-session-store");
-const { TodoList } = require("./lib/todolist");
 
 const app = express();
 const LokiStore = store(session);
