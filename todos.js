@@ -289,7 +289,7 @@ const list = {
 const todo = {
   validationChain: [
     createPathParamValidationChain("listID", "list", (listID, { req }) => {
-      return req.session.todoLists.find(listID) !== undefined;
+      return req.res.locals.todoStore.findList(listID) !== undefined;
     }),
 
     (req, _res, next) => {
@@ -303,7 +303,7 @@ const todo = {
 
     createPathParamValidationChain("todoID", "todo", (todoID, { req }) => {
       const listID = matchedData(req).listID;
-      return req.session.todoLists.find(listID).findByID(todoID) !== undefined;
+      return req.res.locals.todoStore.findTodo(todoID, listID) !== undefined;
     }),
 
     (req, _res, next) => {
