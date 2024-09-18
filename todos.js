@@ -90,9 +90,7 @@ function createListTitleValidationChain(onErrorRenderer) {
       "todoListTitle",
       "List Title",
       (title, { req }) => {
-        return req.session.todoLists.lists.every(
-          (todoList) => todoList.getTitle() !== title
-        );
+        return !req.res.locals.todoStore.listTitleExists(title);
       }
     ),
 
