@@ -339,18 +339,8 @@ const todo = {
       ...this.validationChain,
       (req, res) => {
         const data = matchedData(req);
-        const list = req.session.todoLists.find(data.listID);
-        let delIndex = 0;
-        const todo = list.find((todo, index) => {
-          if (todo.getID() === data.todoID) {
-            delIndex = index;
-            return true;
-          }
-          return false;
-        });
-
-        list.removeAt(delIndex);
-        req.flash("success", `"${todo.getTitle()}" deleted.`);
+        const todo = res.locals.todoStore.removeTodo(data.todoID, data.listID);
+        req.flash("success", `"${todo.title}" deleted.`);
         res.redirect(`/lists/${data.listID}`);
       },
     ];
