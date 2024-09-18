@@ -182,10 +182,10 @@ const list = {
       ...this.validationChain,
       (req, res) => {
         const data = matchedData(req);
-        const todoList = req.session.todoLists.find(data.listID);
+        const todoList = res.locals.todoStore.findList(data.listID);
         res.render("edit-list", {
           todoList,
-          todoListTitle: todoList.getTitle(),
+          todoListTitle: todoList.title,
         });
       },
     ];

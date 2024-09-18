@@ -1,19 +1,19 @@
 extends new-list
 
 block main
-  section#todos(class=todoList.isDone() ? "done" : "")
+  section#todos(class=todoList.done ? "done" : "")
     header
-      h2 Editing "#{todoList.getTitle()}"
+      h2 Editing "#{todoList.title}"
       ul
         li
           form.delete(
-            action=`/lists/${todoList.getID()}/destroy`
+            action=`/lists/${todoList.id}/destroy`
             method="post"
           )
             button.delete(type="submit") Delete List
 
   +listForm(
-    `/lists/${todoList.getID()}/edit`,
-    `/lists/${todoList.getID()}`,
+    `/lists/${todoList.id}/edit`,
+    `/lists/${todoList.id}`,
     "Enter the new title for the list:"
   )

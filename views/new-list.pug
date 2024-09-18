@@ -11,7 +11,7 @@ mixin listForm(action, cancelHref, label)
           id="todoListTitle"
           name="todoListTitle"
           placeholder="List Title",
-          value=todoListTitle || (todoList && todoList.getTitle())
+          value=todoListTitle || (todoList && todoList.title)
         )
 
     fieldset.actions
