@@ -266,14 +266,8 @@ const list = {
       ...this.validationChain,
       (req, res) => {
         const data = matchedData(req);
-        const todoList = req.session.todoLists.find(data.listID);
-        req.session.todoLists.lists.splice(
-          req.session.todoLists.lists.findIndex(
-            (list) => list.getID() === todoList.getID()
-          ),
-          1
-        );
-        req.flash("success", `${todoList.getTitle()} deleted.`);
+        const todoList = res.locals.todoStore.removeList(data.listID);
+        req.flash("success", `${todoList.title} deleted.`);
         res.redirect("/lists");
       },
     ];
