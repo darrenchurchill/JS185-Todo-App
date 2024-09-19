@@ -17,7 +17,7 @@ const flash = require("express-flash");
 const morgan = require("morgan");
 const session = require("express-session");
 
-const { TodoSessionStore } = require("./lib/todo-session-store");
+const { TodoPGStore } = require("./lib/todo-pg-store");
 
 const app = express();
 const LokiStore = store(session);
@@ -222,7 +222,7 @@ const list = {
       (req, res) => {
         const data = matchedData(req);
         res.render("list", {
-          todoList: TodoSessionStore.sortedTodoList(
+          todoList: TodoPGStore.sortedTodoList(
             res.locals.todoStore.findList(data.listID)
           ),
           todoTitle: res.locals.todoTitle,
@@ -364,7 +364,7 @@ app.use(session({
 app.use(flash());
 
 app.use((req, res, next) => {
-  res.locals.todoStore = new TodoSessionStore(req.session);
+  res.locals.todoStore = new TodoPGStore(req.session);
   next();
 });
 
