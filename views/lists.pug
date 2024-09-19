@@ -13,4 +13,4 @@ block main
         li(class=todoList.done ? "done": "")
           a(href=`/lists/${todoList.id}`)
             h2= todoList.title
-            p #{todoList.countDone} / #{todoList.todos.length}
+            p #{todoList.countDone} / #{todoList.length}

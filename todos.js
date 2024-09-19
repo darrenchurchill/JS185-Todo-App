@@ -119,10 +119,14 @@ const lists = {
     });
   }),
 
-  displayLists(_req, res) {
-    res.render("lists", {
-      todoLists: res.locals.todoStore.sortedTodoLists(),
-    });
+  async displayLists(_req, res, next) {
+    try {
+      res.render("lists", {
+        todoLists: await res.locals.todoStore.sortedTodoLists(),
+      });
+    } catch (err) {
+      next(err);
+    }
   },
 
   get newList() {
