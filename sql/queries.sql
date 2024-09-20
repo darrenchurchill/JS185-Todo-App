@@ -87,3 +87,31 @@ WHERE
   t.id = 1
   AND tl.id = 1
 ;
+
+-- @block
+-- @conn todo-lists
+-- @label toggle a single todo's done-ness; view todo's new state w/ list title
+WITH
+  toggled_todo AS (
+    UPDATE todos
+    SET
+      done = NOT done
+    WHERE
+      id = 1
+      AND todolist_id = 1
+    RETURNING
+      id,
+      title,
+      done,
+      todolist_id
+  )
+SELECT
+  tt.id,
+  tt.title,
+  tt.done,
+  tt.todolist_id "listID",
+  tl.title "listTitle"
+FROM
+  toggled_todo tt
+  JOIN todolists tl ON tt.todolist_id = tl.id
+;
