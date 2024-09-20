@@ -346,9 +346,13 @@ const list = {
  */
 const todo = {
   validationChain: [
-    createPathParamValidationChain("listID", "list", (listID, { req }) => {
-      return req.res.locals.todoStore.findList(listID) !== undefined;
-    }),
+    createPathParamValidationChain(
+      "listID",
+      "list",
+      async (listID, { req }) => {
+        return (await req.res.locals.todoStore.findList(listID)) !== undefined;
+      }
+    ),
 
     (req, _res, next) => {
       const result = validationResultMsgOnly(req);
@@ -359,10 +363,17 @@ const todo = {
       next(new Error(result.array()[0]));
     },
 
-    createPathParamValidationChain("todoID", "todo", (todoID, { req }) => {
-      const listID = matchedData(req).listID;
-      return req.res.locals.todoStore.findTodo(todoID, listID) !== undefined;
-    }),
+    createPathParamValidationChain(
+      "todoID",
+      "todo",
+      async (todoID, { req }) => {
+        const listID = matchedData(req).listID;
+        return (
+          (await req.res.locals.todoStore.findTodo(todoID, listID)) !==
+          undefined
+        );
+      }
+    ),
 
     (req, _res, next) => {
       const result = validationResultMsgOnly(req);
