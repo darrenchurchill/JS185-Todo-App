@@ -152,9 +152,14 @@ const lists = {
   get newList() {
     return [
       ...this.validationChain,
-      (req, res) => {
+      async (req, res, next) => {
         const title = matchedData(req).todoListTitle;
-        res.locals.todoStore.addList(title);
+        try {
+          await res.locals.todoStore.addList(title);
+        } catch (err) {
+          next(err);
+          return;
+        }
         req.flash("success", `Todo List created: "${title}"`);
         res.redirect("/lists");
       }
