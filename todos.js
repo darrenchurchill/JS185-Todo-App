@@ -316,9 +316,14 @@ const list = {
         res.redirect(`/lists/${data.listID}`);
       },
 
-      (req, res) => {
+      async (req, res, next) => {
         const data = matchedData(req);
-        res.locals.todoStore.addTodo(data.listID, data.todoTitle);
+        try {
+          await res.locals.todoStore.addTodo(data.listID, data.todoTitle);
+        } catch (err) {
+          next(err);
+          return;
+        }
         req.flash("success", `${data.todoTitle} added.`);
         res.redirect(`/lists/${data.listID}`);
       }
