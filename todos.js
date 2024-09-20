@@ -263,9 +263,17 @@ const list = {
         }
       }),
 
-      (req, res) => {
+      async (req, res, next) => {
         const data = matchedData(req);
-        res.locals.todoStore.setListTitle(data.listID, data.todoListTitle);
+        try {
+          await res.locals.todoStore.setListTitle(
+            data.listID,
+            data.todoListTitle
+          );
+        } catch (err) {
+          next(err);
+          return;
+        }
         req.flash("success", "Todo List title updated.");
         res.redirect(`/lists/${data.listID}`);
       },
