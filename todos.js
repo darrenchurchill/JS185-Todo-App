@@ -205,13 +205,17 @@ const list = {
   get editListForm() {
     return [
       ...this.validationChain,
-      (req, res) => {
+      async (req, res, next) => {
         const data = matchedData(req);
-        const todoList = res.locals.todoStore.findList(data.listID);
-        res.render("edit-list", {
-          todoList,
-          todoListTitle: todoList.title,
-        });
+        try {
+          const todoList = await res.locals.todoStore.findList(data.listID);
+          res.render("edit-list", {
+            todoList,
+            todoListTitle: todoList.title,
+          });
+        } catch (err) {
+          next(err);
+        }
       },
     ];
   },
