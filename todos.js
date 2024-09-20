@@ -90,7 +90,6 @@ function createFormValidationChain(
       );
     });
 }
-/* eslint-enable max-lines-per-function */
 
 function createPathParamValidationChain(paramName, paramDesc, finalCallback) {
   return param(paramName)
@@ -98,11 +97,28 @@ function createPathParamValidationChain(paramName, paramDesc, finalCallback) {
     .withMessage(`That isn't a ${paramDesc} ID; ${paramDesc} IDs are integers.`)
     .bail()
     .toInt()
-    .custom(finalCallback)
-    .withMessage(`That ${paramDesc} doesn't exist.`);
+    .custom(async (value, { req, location, path, pathValues }) => {
+      let isValid = false;
+      try {
+        isValid = await finalCallback(value, {
+          req,
+          location,
+          path,
+          pathValues,
+        });
+      } catch (err) {
+        console.log(err);
+        throw new Error(
+          `That ${paramDesc} might not exist. ` +
+          "Contact administrator if this problem persists."
+        );
+      }
+
+      if (isValid) return true;
+      throw new Error(`That ${paramDesc} doesn't exist.`);
+    });
 }
 
-// eslint-disable-next-line max-lines-per-function
 function createListTitleValidationChain(onErrorRenderer) {
   return [
     createFormValidationChain(
@@ -125,6 +141,7 @@ function createListTitleValidationChain(onErrorRenderer) {
     },
   ];
 }
+/* eslint-enable max-lines-per-function */
 
 /**
  * Object defining lists-related middleware functions.
