@@ -70,3 +70,20 @@ ORDER BY
   t.done,
   lower(t.title)
 ;
+
+-- @block
+-- @conn todo-lists
+-- @label view a single todo and its list title
+SELECT
+  t.id,
+  t.title,
+  t.done,
+  t.todolist_id "listID",
+  tl.title "listTitle"
+FROM
+  todos t
+  JOIN todolists tl ON t.todolist_id = tl.id
+WHERE
+  t.id = 1
+  AND tl.id = 1
+;
