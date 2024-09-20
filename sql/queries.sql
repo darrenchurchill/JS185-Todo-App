@@ -50,7 +50,8 @@ WITH
           todolists tl
           LEFT JOIN todos t ON tl.id = t.todolist_id
         GROUP BY
-          tl.id
+          tl.id,
+          tl.title
         HAVING
           tl.id = 3
       )
@@ -140,4 +141,62 @@ SELECT
 FROM
   removed_todo rt
   JOIN todolists tl ON rt.todolist_id = tl.id
+;
+
+-- @block
+-- @conn todo-lists
+-- @label remove a single todolist and all its todos; view removed list
+WITH
+  removed_todos AS (
+    DELETE FROM todos
+    WHERE
+      todolist_id = 1
+    RETURNING
+      id,
+      title,
+      done,
+      todolist_id
+  ),
+  removed_list AS (
+    DELETE FROM todolists
+    WHERE
+      id = 3
+    RETURNING
+      id,
+      title
+  ),
+  list_metadata AS (
+    SELECT
+      *,
+      "length" > 0
+      AND "countDone" = "length" AS done
+    FROM
+      (
+        SELECT
+          rl.id "listID",
+          rl.title,
+          count(rt.id)::integer "length",
+          coalesce(sum(rt.done::integer), 0)::integer "countDone"
+        FROM
+          removed_list rl
+          LEFT JOIN removed_todos rt ON rl.id = rt.todolist_id
+        GROUP BY
+          rl.id,
+          rl.title
+      )
+  )
+SELECT
+  rt.id,
+  rt.title,
+  rt.done,
+  lm."listID",
+  lm.title "listTitle",
+  lm.length "listLength",
+  lm."countDone"
+FROM
+  removed_todos rt
+  RIGHT JOIN list_metadata lm ON rt.todolist_id = lm."listID"
+ORDER BY
+  rt.done,
+  lower(rt.title)
 ;
