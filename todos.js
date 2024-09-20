@@ -418,10 +418,18 @@ const todo = {
   get removeTodo() {
     return [
       ...this.validationChain,
-      (req, res) => {
+      async (req, res, next) => {
         const data = matchedData(req);
-        const todo = res.locals.todoStore.removeTodo(data.todoID, data.listID);
-        req.flash("success", `"${todo.title}" deleted.`);
+        try {
+          const todo = await res.locals.todoStore.removeTodo(
+            data.todoID,
+            data.listID
+          );
+          req.flash("success", `"${todo.title}" deleted.`);
+        } catch (err) {
+          next(err);
+          return;
+        }
         res.redirect(`/lists/${data.listID}`);
       },
     ];
