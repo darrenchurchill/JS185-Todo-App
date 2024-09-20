@@ -115,3 +115,29 @@ FROM
   toggled_todo tt
   JOIN todolists tl ON tt.todolist_id = tl.id
 ;
+
+-- @block
+-- @conn todo-lists
+-- @label remove a single todo; view todo's new state w/ list title
+WITH
+  removed_todo AS (
+    DELETE FROM todos
+    WHERE
+      id = 1
+      AND todolist_id = 1
+    RETURNING
+      id,
+      title,
+      done,
+      todolist_id
+  )
+SELECT
+  rt.id,
+  rt.title,
+  rt.done,
+  rt.todolist_id "listID",
+  tl.title "listTitle"
+FROM
+  removed_todo rt
+  JOIN todolists tl ON rt.todolist_id = tl.id
+;
