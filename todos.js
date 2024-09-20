@@ -216,6 +216,7 @@ const list = {
     ];
   },
 
+  // eslint-disable-next-line max-lines-per-function
   get displayTodos() {
     return [
       ...this.validationChain,
@@ -227,14 +228,16 @@ const list = {
         next();
       },
 
-      (req, res) => {
+      async (req, res, next) => {
         const data = matchedData(req);
-        res.render("list", {
-          todoList: TodoPGStore.sortedTodoList(
-            res.locals.todoStore.findList(data.listID)
-          ),
-          todoTitle: res.locals.todoTitle,
-        });
+        try {
+          res.render("list", {
+            todoList: await res.locals.todoStore.sortedTodoList(data.listID),
+            todoTitle: res.locals.todoTitle,
+          });
+        } catch (err) {
+          next(err);
+        }
       }
     ];
   },

@@ -9,7 +9,7 @@ block main
     header
       h2= todoList.title
       ul
-        if todoList.todos.length > 0 && !todoList.done
+        if todoList.length > 0 && !todoList.done
           li
             form.complete_all(
               action=`/lists/${todoList.id}/complete_all`
@@ -24,7 +24,7 @@ block main
             button.edit(type="submit") Edit List
 
     ul
-      if todoList.todos.length === 0
+      if todoList.length === 0
         li You don't have any todos. Why not create one?
       else
         each todo in todoList.todos
