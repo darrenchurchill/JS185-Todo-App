@@ -198,9 +198,14 @@ const list = {
   get completeAll() {
     return [
       ...this.validationChain,
-      (req, res) => {
+      async (req, res, next) => {
         const data = matchedData(req);
-        res.locals.todoStore.markAllDone(data.listID);
+        try {
+          await res.locals.todoStore.markAllDone(data.listID);
+        } catch (err) {
+          next(err);
+          return;
+        }
         req.flash("success", "All todos marked completed.");
         res.redirect(`/lists/${data.listID}`);
       },
