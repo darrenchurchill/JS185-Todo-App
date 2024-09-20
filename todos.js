@@ -220,15 +220,20 @@ const list = {
     ];
   },
 
+  // eslint-disable-next-line max-lines-per-function
   get editList() {
     return [
       ...this.validationChain,
-      createListTitleValidationChain((req, res) => {
+      createListTitleValidationChain(async (req, res, next) => {
         const data = matchedData(req);
-        res.render("edit-list", {
-          todoList: res.locals.todoStore.findList(data.listID),
-          todoListTitle: req.body.todoListTitle,
-        });
+        try {
+          res.render("edit-list", {
+            todoList: await res.locals.todoStore.findList(data.listID),
+            todoListTitle: req.body.todoListTitle,
+          });
+        } catch (err) {
+          next(err);
+        }
       }),
 
       (req, res) => {
