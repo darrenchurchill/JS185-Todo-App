@@ -54,6 +54,7 @@ const validationResultMsgOnly = validationResult.withDefaults({
  * Middleware functions
  */
 
+/* eslint-disable max-lines-per-function */
 function createFormValidationChain(
   fieldName,
   fieldDesc,
@@ -66,11 +67,30 @@ function createFormValidationChain(
     .bail()
     .isLength({ max: 100 })
     .withMessage(`Max ${fieldDesc} length is 100 characters.`)
-    .custom(finalCallback)
-    .withMessage(
-      `You're already using that ${fieldDesc}. ${fieldDesc}s must be unique.`
-    );
+    .custom(async (value, { req, location, path, pathValues }) => {
+      let isValid = false;
+      try {
+        isValid = await finalCallback(value, {
+          req,
+          location,
+          path,
+          pathValues,
+        });
+      } catch (err) {
+        console.log(err);
+        throw new Error(
+          `Unable to validate this ${fieldDesc}. ` +
+          "Contact administrator if this problem persists."
+        );
+      }
+
+      if (isValid) return true;
+      throw new Error(
+        `You're already using that ${fieldDesc}. ${fieldDesc}s must be unique.`
+      );
+    });
 }
+/* eslint-enable max-lines-per-function */
 
 function createPathParamValidationChain(paramName, paramDesc, finalCallback) {
   return param(paramName)
