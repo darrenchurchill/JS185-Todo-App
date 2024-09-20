@@ -108,8 +108,8 @@ function createListTitleValidationChain(onErrorRenderer) {
     createFormValidationChain(
       "todoListTitle",
       "List Title",
-      (title, { req }) => {
-        return !req.res.locals.todoStore.listTitleExists(title);
+      async (title, { req }) => {
+        return !(await req.res.locals.todoStore.listTitleExists(title));
       }
     ),
 
@@ -121,7 +121,7 @@ function createListTitleValidationChain(onErrorRenderer) {
       }
       result.array().forEach((errMsg) => req.flash("error", errMsg));
 
-      onErrorRenderer(req, res);
+      onErrorRenderer(req, res, next);
     },
   ];
 }
