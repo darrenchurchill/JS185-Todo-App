@@ -152,9 +152,13 @@ const lists = {
  */
 const list = {
   validationChain: [
-    createPathParamValidationChain("listID", "list", (listID, { req }) => {
-      return req.res.locals.todoStore.findList(listID) !== undefined;
-    }),
+    createPathParamValidationChain(
+      "listID",
+      "list",
+      async (listID, { req }) => {
+        return (await req.res.locals.todoStore.findList(listID)) !== undefined;
+      }
+    ),
 
     (req, _res, next) => {
       const result = validationResultMsgOnly(req);
