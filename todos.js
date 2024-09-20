@@ -385,18 +385,25 @@ const todo = {
     },
   ],
 
+  // eslint-disable-next-line max-lines-per-function
   get toggle() {
     return [
       ...this.validationChain,
-      (req, res) => {
+      async (req, res, next) => {
         const data = matchedData(req);
-        const todo = res.locals.todoStore.findTodo(data.todoID, data.listID);
-        if (todo.done) {
-          req.flash("success", `"${todo.title}" marked not done.`);
-          res.locals.todoStore.markUndone(data.todoID, data.listID);
-        } else {
-          req.flash("success", `"${todo.title}" marked done.`);
-          res.locals.todoStore.markDone(data.todoID, data.listID);
+        try {
+          const todo = await res.locals.todoStore.toggleDone(
+            data.todoID,
+            data.listID
+          );
+          if (todo.done) {
+            req.flash("success", `"${todo.title}" marked done.`);
+          } else {
+            req.flash("success", `"${todo.title}" marked not done.`);
+          }
+        } catch (err) {
+          next(err);
+          return;
         }
         res.redirect(`/lists/${data.listID}`);
       }
