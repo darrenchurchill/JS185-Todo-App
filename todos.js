@@ -333,10 +333,15 @@ const list = {
   get removeList() {
     return [
       ...this.validationChain,
-      (req, res) => {
+      async (req, res, next) => {
         const data = matchedData(req);
-        const todoList = res.locals.todoStore.removeList(data.listID);
-        req.flash("success", `${todoList.title} deleted.`);
+        try {
+          const todoList = await res.locals.todoStore.removeList(data.listID);
+          req.flash("success", `${todoList.title} deleted.`);
+        } catch (err) {
+          next(err);
+          return;
+        }
         res.redirect("/lists");
       },
     ];
