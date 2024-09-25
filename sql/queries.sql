@@ -10,13 +10,17 @@
 -- @conn todo-lists
 -- @label view all todolists and metadata, sorted by done-ness and title
 SELECT
-  *,
+  id,
+  title,
+  "length",
+  "countDone",
   "length" > 0
   AND "countDone" = "length" AS done
 FROM
   (
     SELECT
-      tl.*,
+      tl.id,
+      tl.title,
       count(t.id)::integer "length",
       coalesce(sum(t.done::integer), 0)::integer "countDone"
     FROM
