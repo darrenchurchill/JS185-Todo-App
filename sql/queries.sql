@@ -40,13 +40,16 @@ ORDER BY
 WITH
   list_metadata AS (
     SELECT
-      *,
+      id,
+      title,
+      "length",
+      "countDone",
       "length" > 0
       AND "countDone" = "length" AS done
     FROM
       (
         SELECT
-          tl.id "listID",
+          tl.id,
           tl.title,
           count(t.id)::integer "length",
           coalesce(sum(t.done::integer), 0)::integer "countDone"
@@ -57,20 +60,21 @@ WITH
           tl.id,
           tl.title
         HAVING
-          tl.id = 3
+          tl.id = 2
       )
   )
 SELECT
   t.id,
   t.title,
   t.done,
-  lm."listID",
+  lm.id "listID",
   lm.title "listTitle",
   lm.length "listLength",
-  lm."countDone"
+  lm."countDone",
+  lm.done "listDone"
 FROM
   todos t
-  RIGHT JOIN list_metadata lm ON t.todolist_id = lm."listID"
+  RIGHT JOIN list_metadata lm ON t.todolist_id = lm.id
 ORDER BY
   t.done,
   lower(t.title)
