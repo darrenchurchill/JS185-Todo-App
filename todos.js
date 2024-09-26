@@ -197,9 +197,7 @@ const list = {
     createPathParamValidationChain(
       "listID",
       "list",
-      async (listID, { req }) => {
-        return (await req.res.locals.todoStore.findList(listID)) !== undefined;
-      }
+      (listID, { req }) => req.res.locals.todoStore.listExists(listID)
     ),
 
     (req, _res, next) => {
@@ -367,9 +365,7 @@ const todo = {
     createPathParamValidationChain(
       "listID",
       "list",
-      async (listID, { req }) => {
-        return (await req.res.locals.todoStore.findList(listID)) !== undefined;
-      }
+      (listID, { req }) => req.res.locals.todoStore.listExists(listID)
     ),
 
     (req, _res, next) => {
