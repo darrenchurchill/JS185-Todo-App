@@ -470,8 +470,8 @@ app.use(session({
 }));
 app.use(flash());
 
-app.use((req, res, next) => {
-  res.locals.todoStore = new TodoPGStore(req.session);
+app.use((_req, res, next) => {
+  res.locals.todoStore = new TodoPGStore();
   next();
 });
 
