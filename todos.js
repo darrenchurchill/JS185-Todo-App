@@ -170,15 +170,14 @@ const lists = {
     return [
       ...this.validationChain,
       async (req, res, next) => {
-        const title = matchedData(req).todoListTitle;
         try {
+          const title = matchedData(req).todoListTitle;
           await res.locals.todoStore.addList(title);
+          req.flash("success", `Todo List created: "${title}"`);
+          res.redirect("/lists");
         } catch (err) {
           next(err);
-          return;
         }
-        req.flash("success", `Todo List created: "${title}"`);
-        res.redirect("/lists");
       }
     ];
   },
@@ -214,15 +213,14 @@ const list = {
     return [
       ...this.validationChain,
       async (req, res, next) => {
-        const data = matchedData(req);
         try {
+          const data = matchedData(req);
           await res.locals.todoStore.markAllDone(data.listID);
+          req.flash("success", "All todos marked completed.");
+          res.redirect(`/lists/${data.listID}`);
         } catch (err) {
           next(err);
-          return;
         }
-        req.flash("success", "All todos marked completed.");
-        res.redirect(`/lists/${data.listID}`);
       },
     ];
   },
@@ -231,8 +229,8 @@ const list = {
     return [
       ...this.validationChain,
       async (req, res, next) => {
-        const data = matchedData(req);
         try {
+          const data = matchedData(req);
           const todoList = await res.locals.todoStore.findList(data.listID);
           res.render("edit-list", {
             todoList,
@@ -250,8 +248,8 @@ const list = {
     return [
       ...this.validationChain,
       createListTitleValidationChain(async (req, res, next) => {
-        const data = matchedData(req);
         try {
+          const data = matchedData(req);
           res.render("edit-list", {
             todoList: await res.locals.todoStore.findList(data.listID),
             todoListTitle: req.body.todoListTitle,
@@ -262,18 +260,17 @@ const list = {
       }),
 
       async (req, res, next) => {
-        const data = matchedData(req);
         try {
+          const data = matchedData(req);
           await res.locals.todoStore.setListTitle(
             data.listID,
             data.todoListTitle
           );
+          req.flash("success", "Todo List title updated.");
+          res.redirect(`/lists/${data.listID}`);
         } catch (err) {
           next(err);
-          return;
         }
-        req.flash("success", "Todo List title updated.");
-        res.redirect(`/lists/${data.listID}`);
       },
     ];
   },
@@ -291,8 +288,8 @@ const list = {
       },
 
       async (req, res, next) => {
-        const data = matchedData(req);
         try {
+          const data = matchedData(req);
           res.render("list", {
             todoList: await res.locals.todoStore.sortedTodoList(data.listID),
             todoTitle: res.locals.todoTitle,
@@ -323,15 +320,14 @@ const list = {
       },
 
       async (req, res, next) => {
-        const data = matchedData(req);
         try {
+          const data = matchedData(req);
           await res.locals.todoStore.addTodo(data.listID, data.todoTitle);
+          req.flash("success", `${data.todoTitle} added.`);
+          res.redirect(`/lists/${data.listID}`);
         } catch (err) {
           next(err);
-          return;
         }
-        req.flash("success", `${data.todoTitle} added.`);
-        res.redirect(`/lists/${data.listID}`);
       }
     ];
   },
@@ -340,15 +336,14 @@ const list = {
     return [
       ...this.validationChain,
       async (req, res, next) => {
-        const data = matchedData(req);
         try {
+          const data = matchedData(req);
           const todoList = await res.locals.todoStore.removeList(data.listID);
           req.flash("success", `${todoList.title} deleted.`);
+          res.redirect("/lists");
         } catch (err) {
           next(err);
-          return;
         }
-        res.redirect("/lists");
       },
     ];
   },
@@ -404,8 +399,8 @@ const todo = {
     return [
       ...this.validationChain,
       async (req, res, next) => {
-        const data = matchedData(req);
         try {
+          const data = matchedData(req);
           const todo = await res.locals.todoStore.toggleDone(
             data.todoID,
             data.listID
@@ -415,11 +410,10 @@ const todo = {
           } else {
             req.flash("success", `"${todo.title}" marked not done.`);
           }
+          res.redirect(`/lists/${data.listID}`);
         } catch (err) {
           next(err);
-          return;
         }
-        res.redirect(`/lists/${data.listID}`);
       }
     ];
   },
@@ -428,18 +422,17 @@ const todo = {
     return [
       ...this.validationChain,
       async (req, res, next) => {
-        const data = matchedData(req);
         try {
+          const data = matchedData(req);
           const todo = await res.locals.todoStore.removeTodo(
             data.todoID,
             data.listID
           );
           req.flash("success", `"${todo.title}" deleted.`);
+          res.redirect(`/lists/${data.listID}`);
         } catch (err) {
           next(err);
-          return;
         }
-        res.redirect(`/lists/${data.listID}`);
       },
     ];
   },
