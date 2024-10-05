@@ -55,40 +55,14 @@ const validationResultMsgOnly = validationResult.withDefaults({
  */
 
 /* eslint-disable max-lines-per-function */
-function createFormValidationChain(
-  fieldName,
-  fieldDesc,
-  finalCallback = () => true,
-) {
+function createFormValidationChain(fieldName, fieldDesc) {
   return body(fieldName)
     .trim()
     .notEmpty()
     .withMessage(`${fieldDesc} is required.`)
     .bail()
     .isLength({ max: 100 })
-    .withMessage(`Max ${fieldDesc} length is 100 characters.`)
-    .custom(async (value, { req, location, path, pathValues }) => {
-      let isValid = false;
-      try {
-        isValid = await finalCallback(value, {
-          req,
-          location,
-          path,
-          pathValues,
-        });
-      } catch (err) {
-        console.log(err);
-        throw new Error(
-          `Unable to validate this ${fieldDesc}. ` +
-          "Contact administrator if this problem persists."
-        );
-      }
-
-      if (isValid) return true;
-      throw new Error(
-        `You're already using that ${fieldDesc}. ${fieldDesc}s must be unique.`
-      );
-    });
+    .withMessage(`Max ${fieldDesc} length is 100 characters.`);
 }
 
 function createPathParamValidationChain(paramName, paramDesc, finalCallback) {
@@ -121,13 +95,7 @@ function createPathParamValidationChain(paramName, paramDesc, finalCallback) {
 
 function createListTitleValidationChain(onErrorRenderer) {
   return [
-    createFormValidationChain(
-      "todoListTitle",
-      "List Title",
-      async (title, { req }) => {
-        return !(await req.res.locals.todoStore.listTitleExists(title));
-      }
-    ),
+    createFormValidationChain("todoListTitle", "List Title"),
 
     (req, res, next) => {
       let result = validationResultMsgOnly(req);
@@ -150,11 +118,9 @@ function createListTitleValidationChain(onErrorRenderer) {
  * `TodoList`.
  */
 const lists = {
-  validationChain: createListTitleValidationChain((req, res) => {
-    res.render("new-list", {
-      todoListTitle: req.body.todoListTitle,
-    });
-  }),
+  get validationChain() {
+    return createListTitleValidationChain(this.reRenderNewListForm);
+  },
 
   async displayLists(_req, res, next) {
     try {
@@ -166,15 +132,23 @@ const lists = {
     }
   },
 
+  // eslint-disable-next-line max-lines-per-function
   get newList() {
     return [
       ...this.validationChain,
       async (req, res, next) => {
         try {
           const title = matchedData(req).todoListTitle;
-          await res.locals.todoStore.addList(title);
-          req.flash("success", `Todo List created: "${title}"`);
-          res.redirect("/lists");
+          if (await res.locals.todoStore.addList(title)) {
+            req.flash("success", `Todo List created: "${title}"`);
+            res.redirect("/lists");
+            return;
+          }
+          req.flash(
+            "error",
+            "You're already using that list title. List titles must be unique."
+          );
+          this.reRenderNewListForm(req, res);
         } catch (err) {
           next(err);
         }
@@ -185,18 +159,30 @@ const lists = {
   newListForm(_req, res) {
     res.render("new-list");
   },
+
+  reRenderNewListForm(req, res) {
+    res.render("new-list", {
+      todoListTitle: req.body.todoListTitle,
+    });
+  },
 };
 
 /**
  * Object defining list-related middleware functions.
  * A function is "list-related" if it requires a listID path parameter.
  */
+/* eslint-disable max-lines-per-function */
 const list = {
   validationChain: [
     createPathParamValidationChain(
       "listID",
       "list",
-      (listID, { req }) => req.res.locals.todoStore.listExists(listID)
+      async (listID, { req }) => {
+        req.res.locals.todoList = await req.res.locals.todoStore.findList(
+          listID
+        );
+        return req.res.locals.todoList !== undefined;
+      }
     ),
 
     (req, _res, next) => {
@@ -228,46 +214,33 @@ const list = {
   get editListForm() {
     return [
       ...this.validationChain,
-      async (req, res, next) => {
-        try {
-          const data = matchedData(req);
-          const todoList = await res.locals.todoStore.findList(data.listID);
-          res.render("edit-list", {
-            todoList,
-            todoListTitle: todoList.title,
-          });
-        } catch (err) {
-          next(err);
-        }
-      },
+      this.renderEditListForm,
     ];
   },
 
-  // eslint-disable-next-line max-lines-per-function
   get editList() {
     return [
       ...this.validationChain,
-      createListTitleValidationChain(async (req, res, next) => {
-        try {
-          const data = matchedData(req);
-          res.render("edit-list", {
-            todoList: await res.locals.todoStore.findList(data.listID),
-            todoListTitle: req.body.todoListTitle,
-          });
-        } catch (err) {
-          next(err);
-        }
-      }),
+      createListTitleValidationChain(this.reRenderEditListForm),
 
       async (req, res, next) => {
         try {
           const data = matchedData(req);
-          await res.locals.todoStore.setListTitle(
-            data.listID,
-            data.todoListTitle
+          if (
+            await res.locals.todoStore.setListTitle(
+              data.listID,
+              data.todoListTitle
+            )
+          ) {
+            req.flash("success", "Todo List title updated.");
+            res.redirect(`/lists/${data.listID}`);
+            return;
+          }
+          req.flash(
+            "error",
+            "You're already using that list title. List titles must be unique."
           );
-          req.flash("success", "Todo List title updated.");
-          res.redirect(`/lists/${data.listID}`);
+          this.reRenderEditListForm(req, res);
         } catch (err) {
           next(err);
         }
@@ -275,7 +248,6 @@ const list = {
     ];
   },
 
-  // eslint-disable-next-line max-lines-per-function
   get displayTodos() {
     return [
       ...this.validationChain,
@@ -301,7 +273,6 @@ const list = {
     ];
   },
 
-  // eslint-disable-next-line max-lines-per-function
   get newTodo() {
     return [
       ...this.validationChain,
@@ -347,7 +318,22 @@ const list = {
       },
     ];
   },
+
+  renderEditListForm(_req, res) {
+    res.render("edit-list", {
+      todoList: res.locals.todoList,
+      todoListTitle: res.locals.todoList.title,
+    });
+  },
+
+  reRenderEditListForm(req, res) {
+    res.render("edit-list", {
+      todoList: res.locals.todoList,
+      todoListTitle: req.body.todoListTitle,
+    });
+  }
 };
+/* eslint-enable max-lines-per-function */
 
 /**
  * Object defining todo-related middleware functions.
