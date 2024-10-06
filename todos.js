@@ -118,10 +118,6 @@ function createListTitleValidationChain(onErrorRenderer) {
  * `TodoList`.
  */
 const lists = {
-  get validationChain() {
-    return createListTitleValidationChain(this.reRenderNewListForm);
-  },
-
   async displayLists(_req, res, next) {
     try {
       res.render("lists", {
@@ -135,7 +131,7 @@ const lists = {
   // eslint-disable-next-line max-lines-per-function
   get newList() {
     return [
-      ...this.validationChain,
+      createListTitleValidationChain(this.reRenderNewListForm),
       async (req, res, next) => {
         try {
           const title = matchedData(req).todoListTitle;
@@ -173,54 +169,23 @@ const lists = {
  */
 /* eslint-disable max-lines-per-function */
 const list = {
-  validationChain: [
-    createPathParamValidationChain(
-      "listID",
-      "list",
-      async (listID, { req }) => {
-        req.res.locals.todoList = await req.res.locals.todoStore.findList(
-          listID
-        );
-        return req.res.locals.todoList !== undefined;
-      }
-    ),
-
-    (req, _res, next) => {
-      const result = validationResultMsgOnly(req);
-      if (result.isEmpty()) {
-        next();
-        return;
-      }
-      next(new Error(result.array()[0]));
-    },
-  ],
-
-  get completeAll() {
-    return [
-      ...this.validationChain,
-      async (req, res, next) => {
-        try {
-          const data = matchedData(req);
-          await res.locals.todoStore.markAllDone(data.listID);
-          req.flash("success", "All todos marked completed.");
-          res.redirect(`/lists/${data.listID}`);
-        } catch (err) {
-          next(err);
-        }
-      },
-    ];
+  async completeAll(req, res, next) {
+    try {
+      const data = matchedData(req);
+      await res.locals.todoStore.markAllDone(data.listID);
+      req.flash("success", "All todos marked completed.");
+      res.redirect(`/lists/${data.listID}`);
+    } catch (err) {
+      next(err);
+    }
   },
 
   get editListForm() {
-    return [
-      ...this.validationChain,
-      this.renderEditListForm,
-    ];
+    return this.renderEditListForm;
   },
 
   get editList() {
     return [
-      ...this.validationChain,
       createListTitleValidationChain(this.reRenderEditListForm),
 
       async (req, res, next) => {
@@ -250,8 +215,6 @@ const list = {
 
   get displayTodos() {
     return [
-      ...this.validationChain,
-
       (req, res, next) => {
         // Check session data stored upon invalid "new todo" form submission.
         res.locals.todoTitle = req.session.todoTitle;
@@ -275,7 +238,6 @@ const list = {
 
   get newTodo() {
     return [
-      ...this.validationChain,
       createFormValidationChain("todoTitle", "Todo Title"),
 
       (req, res, next) => {
@@ -303,20 +265,15 @@ const list = {
     ];
   },
 
-  get removeList() {
-    return [
-      ...this.validationChain,
-      async (req, res, next) => {
-        try {
-          const data = matchedData(req);
-          const todoList = await res.locals.todoStore.removeList(data.listID);
-          req.flash("success", `${todoList.title} deleted.`);
-          res.redirect("/lists");
-        } catch (err) {
-          next(err);
-        }
-      },
-    ];
+  async removeList(req, res, next) {
+    try {
+      const data = matchedData(req);
+      const todoList = await res.locals.todoStore.removeList(data.listID);
+      req.flash("success", `${todoList.title} deleted.`);
+      res.redirect("/lists");
+    } catch (err) {
+      next(err);
+    }
   },
 
   renderEditListForm(_req, res) {
@@ -342,85 +299,36 @@ const list = {
  * `TodoList`.
  */
 const todo = {
-  validationChain: [
-    createPathParamValidationChain(
-      "listID",
-      "list",
-      (listID, { req }) => req.res.locals.todoStore.listExists(listID)
-    ),
-
-    (req, _res, next) => {
-      const result = validationResultMsgOnly(req);
-      if (result.isEmpty()) {
-        next();
-        return;
+  async toggle(req, res, next) {
+    try {
+      const data = matchedData(req);
+      const todo = await res.locals.todoStore.toggleDone(
+        data.todoID,
+        data.listID
+      );
+      if (todo.done) {
+        req.flash("success", `"${todo.title}" marked done.`);
+      } else {
+        req.flash("success", `"${todo.title}" marked not done.`);
       }
-      next(new Error(result.array()[0]));
-    },
-
-    createPathParamValidationChain(
-      "todoID",
-      "todo",
-      async (todoID, { req }) => {
-        const listID = matchedData(req).listID;
-        return (
-          (await req.res.locals.todoStore.findTodo(todoID, listID)) !==
-          undefined
-        );
-      }
-    ),
-
-    (req, _res, next) => {
-      const result = validationResultMsgOnly(req);
-      if (result.isEmpty()) {
-        next();
-        return;
-      }
-      next(new Error(result.array()[0]));
-    },
-  ],
-
-  // eslint-disable-next-line max-lines-per-function
-  get toggle() {
-    return [
-      ...this.validationChain,
-      async (req, res, next) => {
-        try {
-          const data = matchedData(req);
-          const todo = await res.locals.todoStore.toggleDone(
-            data.todoID,
-            data.listID
-          );
-          if (todo.done) {
-            req.flash("success", `"${todo.title}" marked done.`);
-          } else {
-            req.flash("success", `"${todo.title}" marked not done.`);
-          }
-          res.redirect(`/lists/${data.listID}`);
-        } catch (err) {
-          next(err);
-        }
-      }
-    ];
+      res.redirect(`/lists/${data.listID}`);
+    } catch (err) {
+      next(err);
+    }
   },
 
-  get removeTodo() {
-    return [
-      ...this.validationChain,
-      async (req, res, next) => {
-        try {
-          const data = matchedData(req);
-          const todo = await res.locals.todoStore.removeTodo(
-            data.todoID,
-            data.listID
-          );
-          req.flash("success", `"${todo.title}" deleted.`);
-          res.redirect(`/lists/${data.listID}`);
-        } catch (err) {
-          next(err);
-        }
-      },
-    ];
+  async removeTodo(req, res, next) {
+    try {
+      const data = matchedData(req);
+      const todo = await res.locals.todoStore.removeTodo(
+        data.todoID,
+        data.listID
+      );
+      req.flash("success", `"${todo.title}" deleted.`);
+      res.redirect(`/lists/${data.listID}`);
+    } catch (err) {
+      next(err);
+    }
   },
 };
 
@@ -451,6 +359,47 @@ app.use(flash());
 
 app.use((_req, res, next) => {
   res.locals.todoStore = new TodoPGStore();
+  next();
+});
+
+app.param("listID", async (req, _res, next) => {
+  await (createPathParamValidationChain(
+    "listID",
+    "list",
+    async (listID, { req }) => {
+      req.res.locals.todoList = await req.res.locals.todoStore.findList(
+        listID
+      );
+      return req.res.locals.todoList !== undefined;
+    }
+  )).run(req);
+
+  const result = validationResultMsgOnly(req);
+  if (!result.isEmpty()) {
+    next(new Error(result.array()[0]));
+    return;
+  }
+  next();
+});
+
+app.param("todoID", async (req, _res, next) => {
+  await (createPathParamValidationChain(
+    "todoID",
+    "todo",
+    async (todoID, { req }) => {
+      const listID = matchedData(req).listID;
+      return (
+        (await req.res.locals.todoStore.findTodo(todoID, listID)) !==
+        undefined
+      );
+    }
+  )).run(req);
+
+  const result = validationResultMsgOnly(req);
+  if (!result.isEmpty()) {
+    next(new Error(result.array()[0]));
+    return;
+  }
   next();
 });
 
