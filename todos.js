@@ -8,10 +8,8 @@
 const store = require("connect-loki");
 const express = require("express");
 const {
-  body,
-  param,
   matchedData,
-  validationResult,
+  ExpressValidator,
 } = require("express-validator");
 const flash = require("express-flash");
 const morgan = require("morgan");
@@ -23,6 +21,14 @@ const app = express();
 const LokiStore = store(session);
 const HOST = "localhost";
 const PORT = 3000;
+
+const {
+  body,
+  param,
+  validationResult,
+} = new ExpressValidator({}, {}, {
+  errorFormatter: (err) => err.msg,
+});
 
 /**
  * Construct the application routes from a `routeMap` object.
@@ -45,10 +51,6 @@ app.map = function(routeMap, route) {
     }
   }
 };
-
-const validationResultMsgOnly = validationResult.withDefaults({
-  formatter: (err) => err.msg,
-});
 
 /**
  * Middleware functions
@@ -96,18 +98,31 @@ function createPathParamValidationChain(paramName, paramDesc, finalCallback) {
 function createListTitleValidationChain(onErrorRenderer) {
   return [
     createFormValidationChain("todoListTitle", "List Title"),
-
-    (req, res, next) => {
-      let result = validationResultMsgOnly(req);
-      if (result.isEmpty()) {
-        next();
-        return;
-      }
-      result.array().forEach((errMsg) => req.flash("error", errMsg));
-
-      onErrorRenderer(req, res, next);
-    },
+    attachRequestValidationResult,
+    flashValidationErrors,
+    ifInvalid(onErrorRenderer),
   ];
+}
+
+function ifInvalid(callback) {
+  return function(req, res, next) {
+    if (req.validationResult.isEmpty()) {
+      next();
+      return;
+    }
+    callback(req, res, next);
+  };
+}
+
+function attachRequestValidationResult(req, _res, next = () => {}) {
+  req.validationResult = validationResult(req);
+  next();
+}
+
+function flashValidationErrors(req, _res, next) {
+  let result = req.validationResult || validationResult(req);
+  result.array().forEach((errMsg) => req.flash("error", errMsg));
+  next();
 }
 /* eslint-enable max-lines-per-function */
 
@@ -239,18 +254,14 @@ const list = {
   get newTodo() {
     return [
       createFormValidationChain("todoTitle", "Todo Title"),
+      attachRequestValidationResult,
+      flashValidationErrors,
 
-      (req, res, next) => {
-        const result = validationResultMsgOnly(req);
-        if (result.isEmpty()) {
-          next();
-          return;
-        }
-        result.array().forEach((errMsg) => req.flash("error", errMsg));
+      ifInvalid((req, res) => {
         req.session.todoTitle = req.body.todoTitle;
         const data = matchedData(req);
         res.redirect(`/lists/${data.listID}`);
-      },
+      }),
 
       async (req, res, next) => {
         try {
@@ -374,9 +385,9 @@ app.param("listID", async (req, _res, next) => {
     }
   )).run(req);
 
-  const result = validationResultMsgOnly(req);
-  if (!result.isEmpty()) {
-    next(new Error(result.array()[0]));
+  attachRequestValidationResult(req);
+  if (!req.validationResult.isEmpty()) {
+    next(new Error(req.validationResult.array()[0]));
     return;
   }
   next();
@@ -395,9 +406,9 @@ app.param("todoID", async (req, _res, next) => {
     }
   )).run(req);
 
-  const result = validationResultMsgOnly(req);
-  if (!result.isEmpty()) {
-    next(new Error(result.array()[0]));
+  attachRequestValidationResult(req);
+  if (!req.validationResult.isEmpty()) {
+    next(new Error(req.validationResult.array()[0]));
     return;
   }
   next();
