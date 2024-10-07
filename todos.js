@@ -26,9 +26,57 @@ const {
   body,
   param,
   validationResult,
-} = new ExpressValidator({}, {}, {
-  errorFormatter: (err) => err.msg,
-});
+} = new ExpressValidator(
+  {
+    attemptAddList: attempt(
+      (title, { req }) => req.res.locals.todoStore.addList(title),
+      "You're already using that list title. List titles must be unique."
+    ),
+
+    attemptSetListTitle: attempt(
+      (title, { req }) => req.res.locals.todoStore.setListTitle(
+        matchedData(req).listID,
+        title
+      ),
+      "You're already using that list title. List titles must be unique."
+    ),
+  },
+  {},
+  {
+    errorFormatter: (err) => err.msg,
+  }
+);
+
+/**
+ * Create a new custom validator function that, when invoked, attempts to
+ * execute the provided `callback`, using the given `errMsg` if the callback
+ * fails.
+ * @param {function} callback the callback to attempt, following the
+ * `express-validator` custom validator signature: return a boolean indicating
+ * validity/success and optionally throw an Error given an invalid value
+ * @param {string} errMsg the error message to use if the callback fails
+ * @returns {true} return `true` if callback succeeds
+ * @throws {Error} throw an Error if the callback fails
+ */
+function attempt(callback, errMsg) {
+  return async function(value, { req, location, path, pathValues }) {
+    try {
+      if (await callback(value, { req, location, path, pathValues })) {
+        return true;
+      }
+    } catch (err) {
+      const wrapped = new Error(
+        "Unable to execute this operation. Contact admin if this problem persists.",
+        {
+          cause: err,
+        }
+      );
+      console.log(wrapped);
+      throw wrapped;
+    }
+    throw new Error(errMsg);
+  };
+}
 
 /**
  * Construct the application routes from a `routeMap` object.
@@ -95,15 +143,6 @@ function createPathParamValidationChain(paramName, paramDesc, finalCallback) {
     });
 }
 
-function createListTitleValidationChain(onErrorRenderer) {
-  return [
-    createFormValidationChain("todoListTitle", "List Title"),
-    attachRequestValidationResult,
-    flashValidationErrors,
-    ifInvalid(onErrorRenderer),
-  ];
-}
-
 function ifInvalid(callback) {
   return function(req, res, next) {
     if (req.validationResult.isEmpty()) {
@@ -143,26 +182,17 @@ const lists = {
     }
   },
 
-  // eslint-disable-next-line max-lines-per-function
   get newList() {
     return [
-      createListTitleValidationChain(this.reRenderNewListForm),
-      async (req, res, next) => {
-        try {
-          const title = matchedData(req).todoListTitle;
-          if (await res.locals.todoStore.addList(title)) {
-            req.flash("success", `Todo List created: "${title}"`);
-            res.redirect("/lists");
-            return;
-          }
-          req.flash(
-            "error",
-            "You're already using that list title. List titles must be unique."
-          );
-          this.reRenderNewListForm(req, res);
-        } catch (err) {
-          next(err);
-        }
+      createFormValidationChain("todoListTitle", "List Title")
+        .attemptAddList(),
+      attachRequestValidationResult,
+      flashValidationErrors,
+      ifInvalid(this.reRenderNewListForm),
+      (req, res) => {
+        const title = matchedData(req).todoListTitle;
+        req.flash("success", `Todo List created: "${title}"`);
+        res.redirect("/lists");
       }
     ];
   },
@@ -201,29 +231,15 @@ const list = {
 
   get editList() {
     return [
-      createListTitleValidationChain(this.reRenderEditListForm),
-
-      async (req, res, next) => {
-        try {
-          const data = matchedData(req);
-          if (
-            await res.locals.todoStore.setListTitle(
-              data.listID,
-              data.todoListTitle
-            )
-          ) {
-            req.flash("success", "Todo List title updated.");
-            res.redirect(`/lists/${data.listID}`);
-            return;
-          }
-          req.flash(
-            "error",
-            "You're already using that list title. List titles must be unique."
-          );
-          this.reRenderEditListForm(req, res);
-        } catch (err) {
-          next(err);
-        }
+      createFormValidationChain("todoListTitle", "List Title")
+        .attemptSetListTitle(),
+      attachRequestValidationResult,
+      flashValidationErrors,
+      ifInvalid(this.reRenderEditListForm),
+      (req, res) => {
+        const data = matchedData(req);
+        req.flash("success", "Todo List title updated.");
+        res.redirect(`/lists/${data.listID}`);
       },
     ];
   },
