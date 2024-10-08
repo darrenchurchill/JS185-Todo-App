@@ -247,7 +247,9 @@ const list = {
   get displayTodos() {
     return [
       (req, res, next) => {
-        // Check session data stored upon invalid "new todo" form submission.
+        // You can be redirected here from newTodo() below, if the "new todo"
+        // form input is invalid. Check the session data to pre-populate the
+        // "new todo" form with the previous invalid form input, if it exists.
         res.locals.todoTitle = req.session.todoTitle;
         delete req.session.todoTitle;
         next();
