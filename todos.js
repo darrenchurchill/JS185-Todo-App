@@ -298,7 +298,14 @@ const list = {
     try {
       const data = matchedData(req);
       const todoList = await res.locals.todoStore.removeList(data.listID);
-      req.flash("success", `${todoList.title} deleted.`);
+      if (todoList) {
+        req.flash("success", `${todoList.title} deleted.`);
+      } else {
+        req.flash(
+          "error",
+          "Unable to delete that list. Are you sure it hasn't already been deleted?"
+        );
+      }
       res.redirect("/lists");
     } catch (err) {
       next(err);
