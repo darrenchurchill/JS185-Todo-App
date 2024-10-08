@@ -255,11 +255,10 @@ const list = {
         next();
       },
 
-      async (req, res, next) => {
+      (_req, res, next) => {
         try {
-          const data = matchedData(req);
           res.render("list", {
-            todoList: await res.locals.todoStore.sortedTodoList(data.listID),
+            todoList: res.locals.todoList,
             todoTitle: res.locals.todoTitle,
           });
         } catch (err) {
