@@ -217,8 +217,9 @@ const list = {
   async completeAll(req, res, next) {
     try {
       const data = matchedData(req);
-      await res.locals.todoStore.markAllDone(data.listID);
-      req.flash("success", "All todos marked completed.");
+      if (await res.locals.todoStore.markAllDone(data.listID)) {
+        req.flash("success", "All todos marked completed.");
+      }
       res.redirect(`/lists/${data.listID}`);
     } catch (err) {
       next(err);
