@@ -152,10 +152,9 @@ function createPathParamValidationChain(paramName, paramDesc) {
     .toInt();
 }
 
-// TODO: combine this function with attachRequestValidationResult() and
-// flashValidationErrors() below?
-function ifInvalid(callback) {
+function ifInvalid(callback, options = { flashErrs: false }) {
   return function(req, res, next) {
+    attachRequestValidationResult(options)(req);
     if (req.validationResult.isEmpty()) {
       next();
       return;
@@ -199,8 +198,7 @@ const lists = {
     return [
       createFormValidationChain("todoListTitle", "List Title")
         .isUniqueListTitle(),
-      attachRequestValidationResult({ flashErrs: true }),
-      ifInvalid(this.reRenderNewListForm),
+      ifInvalid(this.reRenderNewListForm, { flashErrs: true }),
       withAttemptAsync(async (req, res) => {
         const { todoListTitle: title } = matchedData(req);
         await res.locals.todoStore.addList(title, { throw: true });
@@ -243,8 +241,7 @@ const list = {
     return [
       createFormValidationChain("todoListTitle", "List Title")
         .isUniqueListTitle(),
-      attachRequestValidationResult({ flashErrs: true }),
-      ifInvalid(this.reRenderEditListForm),
+      ifInvalid(this.reRenderEditListForm, { flashErrs: true }),
       withAttemptAsync(async (req, res) => {
         const { todoListTitle: title, listID } = matchedData(req);
         await res.locals.todoStore.setListTitle(listID, title, { throw: true });
@@ -277,13 +274,15 @@ const list = {
   get newTodo() {
     return [
       createFormValidationChain("todoTitle", "Todo Title"),
-      attachRequestValidationResult({ flashErrs: true }),
 
-      ifInvalid((req, res) => {
-        req.session.todoTitle = req.body.todoTitle;
-        const data = matchedData(req);
-        res.redirect(`/lists/${data.listID}`);
-      }),
+      ifInvalid(
+        (req, res) => {
+          req.session.todoTitle = req.body.todoTitle;
+          const data = matchedData(req);
+          res.redirect(`/lists/${data.listID}`);
+        },
+        { flashErrs: true }
+      ),
 
       withAttemptAsync(async (req, res) => {
         const { listID, todoTitle } = matchedData(req);
