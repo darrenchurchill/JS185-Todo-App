@@ -9,7 +9,7 @@ block main
     header
       h2= todoList.title
       ul
-        if todoList.length > 0 && !todoList.done
+        if !todoList.done
           li
             form.complete_all(
               action=`/lists/${todoList.id}/complete_all`
