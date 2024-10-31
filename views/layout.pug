@@ -26,9 +26,14 @@ html(lang="en-US")
       block main
 
     block footer
-      if user
-        footer
-          form(action="/users/signout" method="post")
-            fieldset.actions
-              p= `Signed in as ${user.username}`
-              button Sign Out
+      footer
+        if user
+            form(action="/users/signout" method="post")
+              fieldset.actions
+                p= `Signed in as ${user.username}`
+                button Sign Out
+        else
+            form(action="/users/signin", method="get")
+              fieldset.actions
+                p You are not signed in.
+                button Sign In

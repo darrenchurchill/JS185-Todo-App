@@ -14,11 +14,3 @@ block main
           a(href=`/lists/${todoList.id}`)
             h2= todoList.title
             p #{todoList.countDone} / #{todoList.length}
-
-block append footer
-  if !user
-    footer
-      form(action="/users/signin", method="get")
-        fieldset.actions
-          p You are not signed in.
-          button Sign In
