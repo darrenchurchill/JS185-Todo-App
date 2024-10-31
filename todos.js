@@ -372,6 +372,57 @@ const todo = {
 };
 
 /**
+ * Object defining user-related middleware functions.
+ */
+const users = {
+  setSessionUser(req, _res, next) {
+    req.session.user = {
+      username: req.body.username,
+    };
+    next();
+  },
+
+  signInForm(req, res) {
+    if (Object.hasOwn(req.session, "user")) {
+      res.redirect("/lists");
+      return;
+    }
+    req.flash("info", "Please sign in.");
+    res.render("sign-in");
+  },
+
+  // eslint-disable-next-line max-lines-per-function
+  get signIn() {
+    return [
+      createFormValidationChain("username", "Username"),
+      createFormValidationChain("password", "Password", { trim: false }),
+
+      ifInvalid(
+        (req, res) => {
+          req.flash("error", "Invalid credentials");
+          res.render("sign-in", {
+            username: req.body.username,
+          });
+        },
+      ),
+
+      this.setSessionUser,
+
+      (req, res) => {
+        // TODO: Add sign-in procedure that queries the database
+        req.flash("success", "Welcome!");
+        res.redirect("/lists");
+      },
+    ];
+  },
+
+  signOut(req, res) {
+    req.session.destroy();
+    res.redirect("/users/signin");
+  },
+};
+
+/**
  * Application setup
  */
 
@@ -390,15 +441,23 @@ app.use(session({
   },
   name: "launch-school-todo-tracker-session-id",
   resave: false,
-  saveUninitialized: true,
+  saveUninitialized: false,  // Only save sessions containing data we've set in this app
   secret: "this is not secure",
   store: new LokiStore({}),
 }));
 app.use(flash());
 
-app.use((_req, res, next) => {
+app.use((req, res, next) => {
   // Define any res.locals properties here, so a property doesn't seemingly
   // show up out of nowhere in some other middleware.
+  if (Object.hasOwn(req.session, "user")) {
+    res.locals.user = req.session.user;
+  }
+
+  // TODO: res.locals (and app.locals) properties are available to templates
+  // during rendering. Most of the properties below are unrelated to template
+  // content. Move them to a different place (res.custom) perhaps?
+  // Non-standard, but more obvious
   res.locals.todoStore = new TodoPGStore();
   res.locals.todoList = null;
   res.locals.requiresTransactionCommit = false;
@@ -524,6 +583,15 @@ app.map({
           },
         },
       },
+    },
+  },
+  "/users": {
+    "/signin": {
+      get: users.signInForm,
+      post: users.signIn,
+    },
+    "/signout": {
+      post: users.signOut,
     },
   },
 });

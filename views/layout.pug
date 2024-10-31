@@ -24,3 +24,11 @@ html(lang="en-US")
                 p= msg
 
       block main
+
+    block footer
+      if user
+        footer
+          form(action="/users/signout" method="post")
+            fieldset.actions
+              p= `Signed in as ${user.username}`
+              button Sign Out
