@@ -134,12 +134,26 @@ app.map = function(routeMap, route) {
  */
 
 /* eslint-disable max-lines-per-function */
-function createFormValidationChain(fieldName, fieldDesc) {
-  return body(fieldName)
-    .trim()
-    .notEmpty()
-    .withMessage(`${fieldDesc} is required.`)
-    .bail()
+function createFormValidationChain(
+  fieldName,
+  fieldDesc,
+  options = { trim: true }
+) {
+  let chain = body(fieldName);
+  if (options.trim) {
+    chain
+      .trim()
+      .notEmpty()
+      .withMessage(`${fieldDesc} is required.`)
+      .bail();
+  } else {
+    chain
+      .not()
+      .custom((value) => /^\s+|\s+$/.test(value))
+      .withMessage(`${fieldDesc} may not start or end with whitespace characters.`)
+      .bail();
+  }
+  return chain
     .isLength({ max: 100 })
     .withMessage(`Max ${fieldDesc} length is 100 characters.`);
 }
