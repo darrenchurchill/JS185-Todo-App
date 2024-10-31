@@ -548,6 +548,38 @@ app.param("todoID", async (req, res, next) => {
   )(req, res, next);
 });
 
+
+function rejectUnAuth(req, res, next) {
+  if (!Object.hasOwn(req.session, "user")) {
+    res.status(401).render("other-status", { statusMessage: "Unauthorized." });
+  } else {
+    next();
+  }
+}
+
+function allowSignedOut(_req, _res, next) {
+  next("router");
+}
+
+// The authRouter checks the request session for indication the user is signed
+// in. If the user is signed out, the authRouter allows requests to select
+// whitelisted routes by passing control to the next router and bypassing its
+// final "reject if signed-out" middleware.
+// NOTE: When adding whitelisted routes with route parameters, you might have to
+// include regexp's to prevent the parameter from matching unexpected paths.
+// For example, the route path "/lists/:listID" will match a request to
+// "lists/new" unless you specify a regexp pattern for ":listID", like "\d+".
+const authRouter = express.Router();
+// Below are the whitelisted routes the authRouter allows when a user is signed
+// out. Any other requests will trigger the final authRouter.use() middleware.
+authRouter.get("/", allowSignedOut);
+authRouter.get("/lists", allowSignedOut);
+authRouter.get("/lists/:listID(\\d+)", allowSignedOut);
+authRouter.route("/users/signin").get(allowSignedOut).post(allowSignedOut);
+authRouter.use(rejectUnAuth);
+
+app.use("/", authRouter);
+
 app.map({
   "/": {
     get: (_req, res) => {
@@ -617,7 +649,9 @@ app.use(async (err, _req, res, next) => {
 
 app.use((err, _req, res, _next) => {
   console.log(err);
-  res.status(404).render("404");
+  res
+    .status(404)
+    .render("other-status", { statusMessage: "Oops! Something went wrong." });
 });
 
 app.listen(PORT, HOST, () => {
