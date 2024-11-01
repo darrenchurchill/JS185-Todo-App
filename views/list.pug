@@ -8,20 +8,21 @@ block main
   section#todos(class=todoList.done ? "done" : "")
     header
       h2= todoList.title
-      ul
-        if !todoList.done
+      if user
+        ul
+          if !todoList.done
+            li
+              form.complete_all(
+                action=`/lists/${todoList.id}/complete_all`
+                method="post"
+              )
+                button.check(type="submit") Complete All
           li
-            form.complete_all(
-              action=`/lists/${todoList.id}/complete_all`
-              method="post"
+            form(
+              action=`/lists/${todoList.id}/edit`
+              method="get"
             )
-              button.check(type="submit") Complete All
-        li
-          form(
-            action=`/lists/${todoList.id}/edit`
-            method="get"
-          )
-            button.edit(type="submit") Edit List
+              button.edit(type="submit") Edit List
 
     ul
       if todoList.length === 0
@@ -29,30 +30,38 @@ block main
       else
         each todo in todoList.todos
           li(class=todo.done ? "done" : "")
-            form.check(
-              action=`/lists/${todoList.id}/todos/${todo.id}/toggle`
-              method="post"
-            )
-              input(type="hidden" name="done" value=!todo.done)
-              button Done
-            h3= todo.title
-            form.delete(
-              action=`/lists/${todoList.id}/todos/${todo.id}/destroy`
-              method="post"
-            )
-              button Delete
 
-    form(action=`/lists/${todoList.id}/todos` method="post")
-      dl
-        dt
-          label(for="todoTitle") Enter a new todo item:
-        dd
-          input(
-            type="text"
-            name="todoTitle"
-            id="todoTitle"
-            placeholder="Something to do"
-            value=todoTitle
-          )
-      fieldset.actions
-        button Add
+            if user
+              form.check(
+                action=`/lists/${todoList.id}/todos/${todo.id}/toggle`
+                method="post"
+              )
+                input(type="hidden" name="done" value=!todo.done)
+                button Done
+            else
+              form.check(action="#" method="get")
+                button Done
+
+            h3= todo.title
+            if user
+              form.delete(
+                action=`/lists/${todoList.id}/todos/${todo.id}/destroy`
+                method="post"
+              )
+                button Delete
+
+    if user
+      form(action=`/lists/${todoList.id}/todos` method="post")
+        dl
+          dt
+            label(for="todoTitle") Enter a new todo item:
+          dd
+            input(
+              type="text"
+              name="todoTitle"
+              id="todoTitle"
+              placeholder="Something to do"
+              value=todoTitle
+            )
+        fieldset.actions
+          button Add
