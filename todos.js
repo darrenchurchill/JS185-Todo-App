@@ -15,6 +15,7 @@ const flash = require("express-flash");
 const morgan = require("morgan");
 const session = require("express-session");
 
+const { AuthClient } = require("./lib/user-auth");
 const { TodoPGStore } = require("./lib/todo-pg-store");
 
 const app = express();
@@ -375,6 +376,13 @@ const todo = {
  * Object defining user-related middleware functions.
  */
 const users = {
+  renderInvalidAuth(req, res) {
+    req.flash("error", "Invalid credentials");
+    res.render("sign-in", {
+      username: req.body.username,
+    });
+  },
+
   setSessionUser(req, _res, next) {
     req.session.user = {
       username: req.body.username,
@@ -396,15 +404,16 @@ const users = {
     return [
       createFormValidationChain("username", "Username"),
       createFormValidationChain("password", "Password", { trim: false }),
+      ifInvalid(this.renderInvalidAuth),
 
-      ifInvalid(
-        (req, res) => {
-          req.flash("error", "Invalid credentials");
-          res.render("sign-in", {
-            username: req.body.username,
-          });
-        },
-      ),
+      withAttemptAsync(async (req, res, next) => {
+        const { username, password } = matchedData(req);
+        if (await (new AuthClient()).authenticate(username, password)) {
+          next();
+        } else {
+          this.renderInvalidAuth(req, res);
+        }
+      }),
 
       this.setSessionUser,
 
