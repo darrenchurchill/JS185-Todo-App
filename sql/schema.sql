@@ -15,6 +15,10 @@ DROP TABLE IF EXISTS todos
 DROP TABLE IF EXISTS todolists
 ;
 
+-- @label reset -- drop users if exists
+DROP TABLE IF EXISTS users
+;
+
 -- @label create todolists
 CREATE TABLE todolists (id serial PRIMARY KEY, title text UNIQUE NOT NULL)
 ;
@@ -25,5 +29,13 @@ CREATE TABLE todos (
   title text NOT NULL,
   done boolean NOT NULL DEFAULT FALSE,
   todolist_id integer NOT NULL REFERENCES todolists (id) ON DELETE CASCADE
+)
+;
+
+--@label create users
+CREATE TABLE users (
+  id serial PRIMARY KEY,
+  username text UNIQUE NOT NULL,
+  password_hash text NOT NULL
 )
 ;
