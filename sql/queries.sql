@@ -26,6 +26,8 @@ FROM
     FROM
       todolists tl
       LEFT JOIN todos t ON tl.id = t.todolist_id
+    WHERE
+      tl.user_id = 1
     GROUP BY
       tl.id
   )
@@ -56,6 +58,8 @@ WITH
         FROM
           todolists tl
           LEFT JOIN todos t ON tl.id = t.todolist_id
+        WHERE
+          tl.user_id = 1
         GROUP BY
           tl.id,
           tl.title
@@ -94,6 +98,7 @@ FROM
   JOIN todolists tl ON t.todolist_id = tl.id
 WHERE
   t.id = 1
+  AND tl.user_id = 1
   AND tl.id = 1
 ;
 
@@ -155,10 +160,24 @@ FROM
 -- @conn todo-lists
 -- @label remove a single todolist and all its todos; view removed list
 WITH
+  user_list_ids AS (
+    SELECT
+      id
+    FROM
+      todolists
+    WHERE
+      user_id = 1
+  ),
   removed_todos AS (
     DELETE FROM todos
     WHERE
-      todolist_id = 1
+      todolist_id IN (
+        SELECT
+          id
+        FROM
+          user_list_ids
+      )
+      AND todolist_id = 1
     RETURNING
       id,
       title,
