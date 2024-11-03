@@ -511,7 +511,9 @@ app.use((_req, res, next) => {
   // and respond to events:
   // https://nodejs.org/api/http.html#class-httpserverresponse
   res.once("finish", () => {
-    res.locals.commitTransaction();
+    if (res.custom.requiresTransactionCommit) {
+      res.custom.commitTransaction();
+    }
   });
   next();
 });
