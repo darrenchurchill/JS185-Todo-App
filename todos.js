@@ -463,13 +463,13 @@ app.use((req, res, next) => {
   // show up out of nowhere in some other middleware.
   if (Object.hasOwn(req.session, "user")) {
     res.locals.user = req.session.user;
+    res.locals.todoStore = new TodoPGStore(req.session.user.userID);
   }
 
   // TODO: res.locals (and app.locals) properties are available to templates
   // during rendering. Most of the properties below are unrelated to template
   // content. Move them to a different place (res.custom) perhaps?
   // Non-standard, but more obvious
-  res.locals.todoStore = new TodoPGStore();
   res.locals.todoList = null;
   res.locals.requiresTransactionCommit = false;
   res.locals.beginTransaction = async function(options) {
