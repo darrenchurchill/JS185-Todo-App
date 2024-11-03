@@ -562,7 +562,7 @@ app.param("todoID", async (req, res, next) => {
 
 function rejectUnAuth(req, res, next) {
   if (!Object.hasOwn(req.session, "user")) {
-    res.status(401).render("other-status", { statusMessage: "Unauthorized." });
+    res.redirect("/users/signin");
   } else {
     next();
   }
@@ -583,9 +583,6 @@ function allowSignedOut(_req, _res, next) {
 const authRouter = express.Router();
 // Below are the whitelisted routes the authRouter allows when a user is signed
 // out. Any other requests will trigger the final authRouter.use() middleware.
-authRouter.get("/", allowSignedOut);
-authRouter.get("/lists", allowSignedOut);
-authRouter.get("/lists/:listID(\\d+)", allowSignedOut);
 authRouter.route("/users/signin").get(allowSignedOut).post(allowSignedOut);
 authRouter.use(rejectUnAuth);
 
