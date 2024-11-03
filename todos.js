@@ -30,13 +30,13 @@ const {
 } = new ExpressValidator(
   {
     isUniqueListTitle: async (title, { req }) => {
-      if (req.res.locals.todoList && title === req.res.locals.todoList.title) {
+      if (req.res.custom.todoList && title === req.res.custom.todoList.title) {
         // Allow "updating" a list's title to its current title, since
         // TodoPGStore.setListTitle() allows this.
         return true;
       }
 
-      if (await req.res.locals.todoStore.listTitleExists(title)) {
+      if (await req.res.custom.todoStore.listTitleExists(title)) {
         throw new Error(
           "You're already using that list title. List titles must be unique."
         );
@@ -205,7 +205,7 @@ function flashValidationErrors(req, _res, next = () => {}) {
 const lists = {
   displayLists: withAttemptAsync(async (_req, res) => {
     res.render("lists", {
-      todoLists: await res.locals.todoStore.sortedTodoLists(),
+      todoLists: await res.custom.todoStore.sortedTodoLists(),
     });
   }),
 
@@ -216,7 +216,7 @@ const lists = {
       ifInvalid(this.reRenderNewListForm, { flashErrs: true }),
       withAttemptAsync(async (req, res) => {
         const { todoListTitle: title } = matchedData(req);
-        await res.locals.todoStore.addList(title, { throw: true });
+        await res.custom.todoStore.addList(title, { throw: true });
         req.flash("success", `Todo List created: "${title}"`);
         res.redirect("/lists");
       }),
@@ -242,7 +242,7 @@ const lists = {
 const list = {
   completeAll: withAttemptAsync(async (req, res) => {
     const { listID } = matchedData(req);
-    if (await res.locals.todoStore.markAllDone(listID)) {
+    if (await res.custom.todoStore.markAllDone(listID)) {
       req.flash("success", "All todos marked completed.");
     }
     res.redirect(`/lists/${listID}`);
@@ -259,7 +259,7 @@ const list = {
       ifInvalid(this.reRenderEditListForm, { flashErrs: true }),
       withAttemptAsync(async (req, res) => {
         const { todoListTitle: title, listID } = matchedData(req);
-        await res.locals.todoStore.setListTitle(listID, title, { throw: true });
+        await res.custom.todoStore.setListTitle(listID, title, { throw: true });
         req.flash("success", "Todo List title updated.");
         res.redirect(`/lists/${listID}`);
       }),
@@ -272,15 +272,15 @@ const list = {
         // You can be redirected here from newTodo() below, if the "new todo"
         // form input is invalid. Check the session data to pre-populate the
         // "new todo" form with the previous invalid form input, if it exists.
-        res.locals.todoTitle = req.session.todoTitle;
+        res.custom.todoTitle = req.session.todoTitle;
         delete req.session.todoTitle;
         next();
       },
 
       (_req, res) => {
         res.render("list", {
-          todoList: res.locals.todoList,
-          todoTitle: res.locals.todoTitle,
+          todoList: res.custom.todoList,
+          todoTitle: res.custom.todoTitle,
         });
       },
     ];
@@ -301,7 +301,7 @@ const list = {
 
       withAttemptAsync(async (req, res) => {
         const { listID, todoTitle } = matchedData(req);
-        await res.locals.todoStore.addTodo(listID, todoTitle);
+        await res.custom.todoStore.addTodo(listID, todoTitle);
         req.flash("success", `${todoTitle} added.`);
         res.redirect(`/lists/${listID}`);
       }),
@@ -310,7 +310,7 @@ const list = {
 
   removeList: withAttemptAsync(
     async (req, res) => {
-      const todoList = await res.locals.todoStore.removeList(
+      const todoList = await res.custom.todoStore.removeList(
         matchedData(req).listID,
         { throw: true }
       );
@@ -328,14 +328,14 @@ const list = {
 
   renderEditListForm(_req, res) {
     res.render("edit-list", {
-      todoList: res.locals.todoList,
-      todoListTitle: res.locals.todoList.title,
+      todoList: res.custom.todoList,
+      todoListTitle: res.custom.todoList.title,
     });
   },
 
   reRenderEditListForm(req, res) {
     res.render("edit-list", {
-      todoList: res.locals.todoList,
+      todoList: res.custom.todoList,
       todoListTitle: req.body.todoListTitle,
     });
   }
@@ -351,7 +351,7 @@ const list = {
 const todo = {
   toggle: withAttemptAsync(async (req, res) => {
     const { todoID, listID } = matchedData(req);
-    const todo = await res.locals.todoStore.toggleDone(todoID, listID, {
+    const todo = await res.custom.todoStore.toggleDone(todoID, listID, {
       throw: true,
     });
     if (todo.done) {
@@ -364,7 +364,7 @@ const todo = {
 
   removeTodo: withAttemptAsync(async (req, res) => {
     const { todoID, listID } = matchedData(req);
-    const todo = await res.locals.todoStore.removeTodo(todoID, listID, {
+    const todo = await res.custom.todoStore.removeTodo(todoID, listID, {
       throw: true,
     });
     req.flash("success", `"${todo.title}" deleted.`);
@@ -459,24 +459,23 @@ app.use(session({
 app.use(flash());
 
 app.use((req, res, next) => {
-  // Define any res.locals properties here, so a property doesn't seemingly
-  // show up out of nowhere in some other middleware.
+  // The response object, `res`, only has the `locals` property built-in to hold
+  // data intended for the template rendering engine. To avoid cluttering
+  // `res.locals` with non template data, `res.custom` will hold other things.
+  res.custom = {};
+
   if (Object.hasOwn(req.session, "user")) {
     res.locals.user = req.session.user;
-    res.locals.todoStore = new TodoPGStore(req.session.user.userID);
+    res.custom.todoStore = new TodoPGStore(req.session.user.userID);
   }
 
-  // TODO: res.locals (and app.locals) properties are available to templates
-  // during rendering. Most of the properties below are unrelated to template
-  // content. Move them to a different place (res.custom) perhaps?
-  // Non-standard, but more obvious
-  res.locals.todoList = null;
-  res.locals.requiresTransactionCommit = false;
-  res.locals.beginTransaction = async function(options) {
+  res.custom.todoList = null;
+  res.custom.requiresTransactionCommit = false;
+  res.custom.beginTransaction = async function(options) {
     await this.todoStore.beginTransaction(options);
     this.requiresTransactionCommit = true;
   };
-  res.locals.commitTransaction = async function() {
+  res.custom.commitTransaction = async function() {
     if (this.requiresTransactionCommit) {
       await this.todoStore.commitTransaction();
     }
@@ -525,9 +524,9 @@ app.param("listID", async (req, res, next) => {
     async (req, res, next) => {
       const readOnly = req.method !== "POST";
       attachRequestValidationResult({ throw: true })(req);
-      await res.locals.beginTransaction({ readOnly });
-      res.locals.requiresTransactionCommit = true;
-      res.locals.todoList = await res.locals.todoStore.findList(
+      await res.custom.beginTransaction({ readOnly });
+      res.custom.requiresTransactionCommit = true;
+      res.custom.todoList = await res.custom.todoStore.findList(
         req.params.listID,
         { throw: true }
       );
@@ -548,7 +547,7 @@ app.param("todoID", async (req, res, next) => {
     async (req, _res, next) => {
       attachRequestValidationResult({ throw: true })(req);
       const { listID, todoID } = matchedData(req);
-      await req.res.locals.todoStore.findTodo(todoID, listID, { throw: true });
+      await req.res.custom.todoStore.findTodo(todoID, listID, { throw: true });
       next();
     },
     {
@@ -645,7 +644,7 @@ app.all("*", (_req, res, next) => {
 
 app.use(async (err, _req, res, next) => {
   try {
-    await res.locals.todoStore.rollbackTransaction();
+    await res.custom.todoStore.rollbackTransaction();
   } catch (newErr) {
     console.log(new Error(
       "Caught new error attempting to rollback transaction",
