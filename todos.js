@@ -383,12 +383,14 @@ const users = {
     });
   },
 
-  setSessionUser(req, _res, next) {
+  setSessionUser: withAttemptAsync(async (req, _res, next) => {
+    const { username } = matchedData(req);
     req.session.user = {
-      username: req.body.username,
+      userID: await (new AuthClient()).getUserID(username),
+      username,
     };
     next();
-  },
+  }),
 
   signInForm(req, res) {
     if (Object.hasOwn(req.session, "user")) {
