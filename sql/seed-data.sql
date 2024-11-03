@@ -17,12 +17,12 @@ DELETE FROM todolists
 
 -- @label insert todo lists
 INSERT INTO
-  todolists (title)
+  todolists (title, user_id)
 VALUES
-  ('Work Todos'),
-  ('Home Todos'),
-  ('Additional Todos'),
-  ('social todos')
+  ('Work Todos', 1),
+  ('Home Todos', 1),
+  ('Additional Todos', 1),
+  ('social todos', 1)
 ;
 
 -- @label create temp todos table

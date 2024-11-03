@@ -19,8 +19,21 @@ DROP TABLE IF EXISTS todolists
 DROP TABLE IF EXISTS users
 ;
 
+-- @label create users
+CREATE TABLE users (
+  id serial PRIMARY KEY,
+  user_uuid UUID UNIQUE NOT NULL DEFAULT gen_random_uuid (),
+  username text UNIQUE NOT NULL,
+  password_hash text NOT NULL
+)
+;
+
 -- @label create todolists
-CREATE TABLE todolists (id serial PRIMARY KEY, title text UNIQUE NOT NULL)
+CREATE TABLE todolists (
+  id serial PRIMARY KEY,
+  title text UNIQUE NOT NULL,
+  user_id integer NOT NULL REFERENCES users (id) ON DELETE CASCADE
+)
 ;
 
 -- @label create todos
@@ -29,13 +42,5 @@ CREATE TABLE todos (
   title text NOT NULL,
   done boolean NOT NULL DEFAULT FALSE,
   todolist_id integer NOT NULL REFERENCES todolists (id) ON DELETE CASCADE
-)
-;
-
---@label create users
-CREATE TABLE users (
-  id serial PRIMARY KEY,
-  username text UNIQUE NOT NULL,
-  password_hash text NOT NULL
 )
 ;

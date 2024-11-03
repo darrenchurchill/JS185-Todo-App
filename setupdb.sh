@@ -12,9 +12,9 @@ USERS="sql/users.sql"
 dropdb "$DATABASE"
 createdb "$DATABASE"
 psql "$DATABASE" < sql/schema.sql
-psql "$DATABASE" < sql/seed-data.sql
 if [ -f "$USERS" ]; then
   psql "$DATABASE" < "$USERS"
 else
   echo "No $USERS file. Skipping users table INSERTS"
 fi
+psql "$DATABASE" < sql/seed-data.sql
