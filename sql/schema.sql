@@ -31,8 +31,9 @@ CREATE TABLE users (
 -- @label create todolists
 CREATE TABLE todolists (
   id serial PRIMARY KEY,
-  title text UNIQUE NOT NULL,
-  user_id integer NOT NULL REFERENCES users (id) ON DELETE CASCADE
+  title text NOT NULL,
+  user_id integer NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+  UNIQUE (title, user_id)
 )
 ;
 
