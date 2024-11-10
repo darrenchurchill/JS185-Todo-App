@@ -5,7 +5,8 @@
   "main": "todos.js",
   "scripts": {
     "test": "jest",
-    "start": "nodemon todos.js"
+    "start": "node todos.js",
+    "dev": "DOTENV_KEY=$(npx dotenv-vault@latest keys development) nodemon todos.js"
   },
   "author": "Darren Churchill",
   "license": "ISC",
