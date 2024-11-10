@@ -12,6 +12,7 @@ USERS="sql/users.sql"
 dropdb "$DATABASE"
 createdb "$DATABASE"
 psql "$DATABASE" < sql/schema.sql
+psql "$DATABASE" < sql/schema-local.sql
 if [ -f "$USERS" ]; then
   psql "$DATABASE" < "$USERS"
 else
