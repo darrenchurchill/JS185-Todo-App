@@ -15,13 +15,14 @@ const flash = require("express-flash");
 const morgan = require("morgan");
 const session = require("express-session");
 
+const { env } = require("./lib/config");
 const { AuthClient } = require("./lib/user-auth");
 const { TodoPGStore } = require("./lib/todo-pg-store");
 
 const app = express();
 const LokiStore = store(session);
-const HOST = "localhost";
-const PORT = 3000;
+
+const { HOST, PORT, SESSION_SECRET } = env;
 
 const {
   body,
@@ -453,7 +454,7 @@ app.use(session({
   name: "launch-school-todo-tracker-session-id",
   resave: false,
   saveUninitialized: false,  // Only save sessions containing data we've set in this app
-  secret: "this is not secure",
+  secret: SESSION_SECRET,
   store: new LokiStore({}),
 }));
 app.use(flash());
