@@ -26,7 +26,7 @@ substitutions:
   _ARTIFACT_REPO: "cloud-build"
   _IMAGE_NAME: "${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REPO}/${_SERVICE_NAME}-image:${SHORT_SHA}"
   _REGION: "us-central1"
-  _SERVICE_NAME: "${PROJECT_ID}"
+  _SERVICE_NAME: "todo-app"
 options:
   dynamicSubstitutions: true
   logging: CLOUD_LOGGING_ONLY

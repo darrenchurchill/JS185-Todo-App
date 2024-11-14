@@ -4,7 +4,7 @@
 
 A todo list web application, deployed to Google Cloud Run:
 
-<https://js185-todo-app-401967808958.us-central1.run.app>
+<https://todo-app-401967808958.us-central1.run.app>
 
 The Launch School provided final project code is available
 [here](https://da77jsbdz4r05.cloudfront.net/zips/js185/todos-js185-final-20201123.zip).
