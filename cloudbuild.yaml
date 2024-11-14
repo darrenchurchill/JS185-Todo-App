@@ -26,5 +26,5 @@ substitutions:
   _REGION: "us-central1"
   _SERVICE_NAME: "${PROJECT_ID}"
 options:
-  defaultLogsBucketBehavior: REGIONAL_USER_OWNED_BUCKET
   dynamicSubstitutions: true
+  logging: CLOUD_LOGGING_ONLY
