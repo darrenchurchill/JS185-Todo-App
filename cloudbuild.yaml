@@ -20,6 +20,7 @@ steps:
     - "--service-account=cloud-run-service-account@$PROJECT_ID.iam.gserviceaccount.com"
     - "--region"
     - "$_REGION"
+    - "--allow-unauthenticated"
 serviceAccount: "projects/$PROJECT_ID/serviceAccounts/cloud-build-service-account@$PROJECT_ID.iam.gserviceaccount.com"
 substitutions:
   _ARTIFACT_REPO: "cloud-build"
